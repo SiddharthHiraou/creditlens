@@ -41,6 +41,8 @@ jobs:
           .venv/bin/python -m src.cli explain
           .venv/bin/python -m src.cli warm-cache
           .venv/bin/python -m src.api.export_demo
+          .venv/bin/python -m src.cli flows ingest
+          .venv/bin/python -m src.cli flows drift
 
   frontend:
     runs-on: ubuntu-latest

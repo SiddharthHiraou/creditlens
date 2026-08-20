@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.deps import build_state
 from src.api.logging_setup import RequestContextMiddleware, configure_logging
-from src.api.routers import decisions, health, model, scoring, simulate
+from src.api.routers import decisions, health, memo, model, scoring, simulate
 from src.api.scoring import ScoringService
 from src.api.security import RateLimiter
 from src.api.settings import Settings, get_settings
@@ -72,7 +72,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(RequestContextMiddleware, logger=logger)
 
-    for router in (health.router, scoring.router, decisions.router, model.router, simulate.router):
+    for router in (
+        health.router,
+        scoring.router,
+        decisions.router,
+        memo.router,
+        model.router,
+        simulate.router,
+    ):
         app.include_router(router)
 
     @app.exception_handler(Exception)

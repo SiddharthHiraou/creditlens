@@ -65,10 +65,12 @@ export default function MonitoringPage() {
               predictions, so its validation score is optimistic by construction, and
               serving it would require all three base models.
             </Note>
-            <Note tone="warn">
-              The automated promotion gate — retrain on drift alert, promote only if AUC
-              does not regress, calibration holds and no fairness metric degrades — is
-              Phase 6 and is not built yet. Today promotion is manual.
+            <Note>
+              Promotion is gated automatically. A candidate is promoted only if all five
+              checks pass against the incumbent: AUC within 1%, calibration error not
+              worsening, score PSI below 0.25, rank ordering monotonic, and disparate
+              impact not falling by more than 0.05. There is no promote-with-a-warning
+              path — a failing gate raises an issue and leaves the incumbent serving.
             </Note>
           </div>
         </Card>

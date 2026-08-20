@@ -152,6 +152,7 @@ class DecisionRecord(BaseModel):
     pd: float
     score: float
     decision: str
+    exposure: float | None = None
     model_version: str
     feature_spec_fingerprint: str
     policy_version: str

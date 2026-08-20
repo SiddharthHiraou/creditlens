@@ -189,6 +189,7 @@ class ScoringService:
             "pd": pd_hat,
             "score": score,
             "decision": decision,
+            "exposure": float(application.amt_credit),
             "expected_loss": loss,
             "model_version": self.model_version,
             "feature_spec_fingerprint": self.spec.fingerprint,

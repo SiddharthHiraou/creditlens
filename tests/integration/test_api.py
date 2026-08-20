@@ -368,3 +368,86 @@ def test_score_and_decision_are_consistent_with_the_policy(client):
     )
     ranks = [r for _, r in scored]
     assert ranks == sorted(ranks), "decision bands are not monotone in score"
+
+
+# -- adverse action memo --------------------------------------------------------
+
+
+def _first_non_approval(client):
+    payloads = json.loads((ARTIFACTS / "sample_payloads.json").read_text())
+    for p in payloads[:40]:
+        body = client.post("/v1/score", json=p, headers=HEADERS).json()
+        if body["decision"] != "approve":
+            return body
+    pytest.skip("no non-approvals in the sample")
+
+
+def test_memo_is_generated_from_the_stored_decision(client):
+    scored = _first_non_approval(client)
+    body = client.post(
+        "/v1/memo", json={"decision_id": scored["decision_id"]}, headers=HEADERS
+    ).json()
+
+    assert body["decision_id"] == scored["decision_id"]
+    assert body["memo"]["summary"] and body["memo"]["detail"] and body["memo"]["next_steps"]
+    assert body["prompt_hash"] and body["prompt_version"]
+
+
+def test_memo_cites_only_families_the_decision_carried(client):
+    """The grounding rule, enforced at the API boundary."""
+    scored = _first_non_approval(client)
+    body = client.post(
+        "/v1/memo", json={"decision_id": scored["decision_id"]}, headers=HEADERS
+    ).json()
+
+    issued = {rc["family"] for rc in scored["reason_codes"]}
+    assert set(body["memo"]["reason_families_cited"]) <= issued
+
+
+def test_memo_states_the_actual_requested_amount(client):
+    """Regression guard for a real bug.
+
+    AMT_CREDIT is not in the feature spec — selection pruned it — so the amount
+    cannot come from the stored feature vector. Before `exposure` was recorded
+    on the decision, every memo read "the application for 1".
+    """
+    scored = _first_non_approval(client)
+    record = client.get(f"/v1/decisions/{scored['decision_id']}", headers=HEADERS).json()
+    amount = record["exposure"]
+    assert amount and amount > 1000
+
+    body = client.post(
+        "/v1/memo", json={"decision_id": scored["decision_id"]}, headers=HEADERS
+    ).json()
+    assert f"{round(amount):,}" in body["memo"]["summary"]
+
+
+def test_memo_is_refused_for_an_approval(client):
+    payloads = json.loads((ARTIFACTS / "sample_payloads.json").read_text())
+    for p in payloads[:40]:
+        body = client.post("/v1/score", json=p, headers=HEADERS).json()
+        if body["decision"] == "approve":
+            r = client.post("/v1/memo", json={"decision_id": body["decision_id"]}, headers=HEADERS)
+            assert r.status_code == 409
+            return
+    pytest.skip("no approvals in the sample")
+
+
+def test_memo_is_refused_when_the_decision_carries_no_reasons(client):
+    payloads = json.loads((ARTIFACTS / "sample_payloads.json").read_text())
+    for p in payloads[:40]:
+        body = client.post("/v1/score?explain=never", json=p, headers=HEADERS).json()
+        if body["decision"] != "approve":
+            r = client.post("/v1/memo", json={"decision_id": body["decision_id"]}, headers=HEADERS)
+            assert r.status_code == 409
+            return
+    pytest.skip("no non-approvals in the sample")
+
+
+def test_memo_for_an_unknown_decision_is_404(client):
+    r = client.post("/v1/memo", json={"decision_id": "nope"}, headers=HEADERS)
+    assert r.status_code == 404
+
+
+def test_memo_requires_auth(client):
+    assert client.post("/v1/memo", json={"decision_id": "x"}).status_code == 401

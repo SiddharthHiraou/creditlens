@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast audit explain demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain memo copilot drift retrain promote demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -33,6 +33,18 @@ audit:  ## Phase 3: SHAP, ECOA reason codes, counterfactuals, fairness, mitigati
 
 explain:  ## Adverse action reasons + counterfactual levers for one declined applicant
 	$(PY) -m src.cli explain
+
+copilot:  ## Ask the analyst copilot a question (Q="...")
+	$(PY) -m src.cli copilot "$(Q)"
+
+drift:  ## Run the daily drift flow; writes an alert above PSI 0.25
+	$(PY) -m src.cli flows drift
+
+retrain:  ## Train and stage a candidate model
+	$(PY) -m src.cli flows retrain
+
+promote:  ## Gate the staged candidate; promotes only on a clean sweep
+	$(PY) -m src.cli flows promote
 
 demo-data:  ## Export the static JSON snapshots the frontend renders from
 	$(PY) -m src.api.export_demo

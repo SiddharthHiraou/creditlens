@@ -115,3 +115,23 @@ export type Explainability = {
   };
   informationValues: { feature: string; iv: number; strength: string }[];
 };
+
+export type Genai = {
+  credentialsConfigured: boolean;
+  unitEconomics: {
+    memo_model: string;
+    memos_per_1000_decisions: number;
+    cost_per_memo_usd: number;
+    cost_per_1000_decisions_usd: number;
+  };
+  portfolioQueries: { name: string; description: string }[];
+  memos: {
+    skIdCurr: number; decision: string; model: string; offline: boolean;
+    promptVersion: string; promptHash: string; costUsd: number;
+    memo: { summary: string; detail: string; reason_families_cited: string[]; next_steps: string };
+  }[];
+  copilot: {
+    question: string; answer: string; model: string;
+    offline: boolean; toolsCalled: string[]; costUsd: number;
+  }[];
+};

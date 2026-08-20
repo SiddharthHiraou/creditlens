@@ -6,15 +6,18 @@ credit score, an approve/decline/refer decision, ECOA-compliant reason codes, an
 an LLM-drafted underwriter memo — with the monitoring, fairness testing and
 governance artifacts a bank model validation team would ask for.
 
-> **Build status: Phases 1-5 of 7 complete.** Data layer, target definition,
+> **Build status: Phases 1-6 of 7 complete.** Data layer, target definition,
 > out-of-time splitting, a 221-feature Polars pipeline, WOE/IV, four model
 > tracks with Optuna and monotonic constraints, smoothed isotonic calibration,
 > PSI/CSI, an MLflow registry, a SHAP service, ECOA reason codes,
 > counterfactual levers, a Fairlearn audit and a FastAPI scoring service with
 > ONNX serving, a Redis feature cache and a Postgres audit log are done, tested
 > and reproducible, along with a seven-page Next.js dashboard carrying an
-> interactive cutoff simulator. The MLOps flows and the GenAI layer are not
-> built yet. Everything claimed below is reproducible today.
+> interactive cutoff simulator, four Prefect flows with an automated promotion
+> gate, and a grounded GenAI layer. Phase 7 (governance docs, demo, Terraform)
+> remains. Everything claimed below is reproducible today, with one stated
+> exception: no Anthropic credentials were available, so the LLM features run
+> their deterministic offline paths and live calls are unverified.
 
 ---
 
@@ -103,7 +106,7 @@ Roughly 6 minutes. For the Phase 1 baseline alone, `make baseline`.
 make test
 ```
 
-210 tests, 77% coverage on `src/`.
+249 tests, 73% coverage on `src/`.
 
 ## Getting the data
 
@@ -173,7 +176,7 @@ data/synthetic ─┘   (source        (7 contracts,     (90 DPD /     (out-of- 
 | 3 | SHAP service, ECOA reason codes, counterfactuals, Fairlearn + mitigation tradeoff | **done** |
 | 4 | FastAPI, ONNX export, Redis, Postgres audit log, load test | **done** |
 | 5 | Next.js frontend, cutoff simulator | **done** |
-| 6 | Prefect flows, drift monitoring, promotion gate, memo generator, copilot | not started |
+| 6 | Prefect flows, drift monitoring, promotion gate, memo generator, copilot | **done** |
 | 7 | Model card, validation report, credit policy, ADRs, demo | not started |
 
 ## Explainability and adverse action
@@ -436,6 +439,123 @@ a hidden tab. Mount animation is now off everywhere.
 transparent above and below it, flashing white during overscroll in dark mode.
 It belongs on `<html>` too.
 
+## Orchestration and the promotion gate
+
+Four Prefect flows. Prefect over Airflow because the whole orchestration layer is
+four Python functions on a cron, and Airflow's scheduler, webserver and metadata
+database are a lot of moving parts for that.
+
+| Flow | Cadence | Does |
+|---|---|---|
+| `ingest_and_validate` | daily | Enforces all 7 Pandera contracts; fails the run rather than landing bad data |
+| `compute_drift` | daily | Score PSI, per-feature CSI; writes `drift_alert.json` above 0.25 |
+| `retrain_candidate` | monthly or on alert | Full pipeline, Optuna, calibration, staged to `artifacts/candidates/` |
+| `validate_and_promote` | gated | Five checks against the incumbent; promotes only on a clean sweep |
+
+```bash
+make drift      # writes an alert above PSI 0.25
+make retrain    # trains and stages a candidate
+make promote    # gates it
+```
+
+### The gate
+
+| Check | Threshold |
+|---|---|
+| Discrimination | AUC within 1% of the incumbent |
+| Calibration | ECE not worsening by more than 0.005 |
+| Stability | Score PSI below 0.25 |
+| Rank ordering | Monotonic across deciles |
+| Fairness | Disparate impact not falling by more than 0.05 |
+
+**There is no promote-with-a-warning path.** A failing gate writes an issue and
+leaves the incumbent serving. The cost of running the incumbent another month is
+bounded; the cost of promoting a quietly worse model is not.
+
+**Verified in both directions**, which is the part that matters — a gate only
+ever tested against a good candidate is a gate nobody knows works:
+
+```
+candidate identical to incumbent  → all 5 pass → promoted
+candidate = 6 decision stumps     → discrimination 0.7913 → 0.7339  FAIL
+                                  → fairness      0.3843 → 0.3144  FAIL
+                                  → issue written, incumbent still serving
+```
+
+And the Phase 6 deliverable, end to end:
+
+```
+drift alert found: PSI 0.3100 (significant shift)
+training candidate (trigger: drift-alert)
+candidate 20260820T232449 staged: OOT AUC 0.7913
+alert consumed
+```
+
+One detail that would otherwise be a silent bug: the training run overwrites
+`champion_model.joblib` in place, so `retrain_candidate` copies the result aside
+before gating. Without that the gate compares the new model to itself and passes
+everything trivially.
+
+## The GenAI layer
+
+Two grounded features, both cheap, both fenced.
+
+| | Memo generator | Analyst copilot |
+|---|---|---|
+| Model | `claude-haiku-4-5` | `claude-sonnet-5` |
+| Why that tier | High volume, templated | Open questions, needs reasoning |
+| Scales with decisions | yes | no |
+
+**Unit economics: $0.0025 per memo, $1.00 per 1,000 decisions.** Only
+non-approvals get a memo, so that is 400 memos per 1,000 at a 60% approval
+policy. Copilot usage is analyst-driven and does not scale with decision volume,
+so it is priced separately rather than folded into the per-decision number.
+Sonnet 5 pricing is introductory through 2026-08-31.
+
+```bash
+make copilot Q="What does our policy say about thin bureau files?"
+.venv/bin/python -m src.cli memo <decision-id>
+```
+
+### The memo generator cannot invent a reason
+
+Enforced three ways rather than asked for once: the prompt says so; the output is
+parsed into a schema that **rejects decision language** ("I recommend approving"
+fails validation, it is not softened); and a grounding check compares every cited
+family against the families the decision actually carried, **discarding** a memo
+that cites one it was not given.
+
+The endpoint reinforces it — the memo is generated from the **stored decision**,
+read back out of the audit log, never from a caller-supplied payload. Approvals
+are refused with a 409: an adverse action notice explains a denial, and there is
+nothing adverse about an approval.
+
+### The copilot cannot write SQL
+
+`query_portfolio_stats` takes a query **name** from a whitelist plus typed
+parameters. The model never emits SQL. Letting a model write queries against a
+production database — read-only, careful prompt, all of it — makes the prompt the
+security boundary, and a prompt is not a security boundary. None of the three
+tools writes anything, and none exposes an individual applicant's record.
+
+Prompts receive banded figures (income to the nearest 25k), never the feature
+vector or date of birth. Every call is logged with model, prompt version, prompt
+hash, tokens and cost.
+
+### What is not verified
+
+**No Anthropic credentials were available in this build**, so both features run
+their deterministic offline paths — a template memo and retrieval-only copilot
+output, subject to the same validation and flagged `offline=True`. The dashboard
+labels them on the page. Live API behaviour is the one part of this project that
+has not been exercised, and it is not described as if it had been.
+
+Retrieval is BM25 over the written policy rather than the pgvector the brief
+specifies. Two concessions were needed to make it adequate: heading terms weighted
+triple, and crude suffix stripping so "retrain" matches "retraining". pgvector
+remains the right destination — dense retrieval handles paraphrase and BM25 does
+not.
+
 ## Decision records
 
 - [ADR 0001](docs/adr/0001-out-of-time-splitting.md) — out-of-time splitting, never random
@@ -446,6 +566,8 @@ It belongs on `<html>` too.
 - [ADR 0006](docs/adr/0006-smoothed-isotonic-calibration.md) — why plain isotonic is unusable as a decisioning score
 - [ADR 0007](docs/adr/0007-serving-architecture.md) — ONNX serving, server-side feature cache, append-only audit log
 - [ADR 0008](docs/adr/0008-static-frontend.md) — static export over pre-computed snapshots, client-side simulator
+- [ADR 0009](docs/adr/0009-promotion-gate.md) — five gated checks, no promote-with-a-warning path
+- [ADR 0010](docs/adr/0010-genai-guardrails.md) — the LLM narrates, never decides, never writes SQL
 
 ## Stack decisions so far
 
@@ -478,12 +600,16 @@ src/fairness/     group metrics, four-fifths rule, Fairlearn cross-check,
                   mitigation tradeoff curves
 src/api/          FastAPI app: schemas, auth, rate limiting, structured logs,
                   ONNX scorer, Redis feature cache, Postgres audit log, routers
+src/llm/          memo generator, analyst copilot, three read-only tools,
+                  cost accounting and the per-call audit log
+flows/            Prefect: ingest, drift, retrain, promotion gate
 src/cli.py        creditlens data | validate | features | baseline | train |
                   audit | explain | warm-cache | serve | sources
-tests/            210 tests across target, splits, metrics, loaders, WOE, PSI,
+tests/            249 tests across target, splits, metrics, loaders, WOE, PSI,
                   features, calibration, scorecard, selection, decision, reason
                   codes, SHAP, counterfactuals, fairness, mitigation, ensemble,
-                  tuning, API contracts, and four end-to-end suites
+                  tuning, API contracts, LLM guardrails, Prefect flows and the
+                  promotion gate, across five end-to-end suites
 docs/             target definition (binding), fairness findings, 6 ADRs
 notebooks/        01_eda.ipynb — exploratory only, never the source of truth
 artifacts/        metrics JSON, champion model, MLflow store (gitignored)

@@ -48,6 +48,10 @@ decisions = Table(
     Column("pd", Float, nullable=False),
     Column("score", Float, nullable=False),
     Column("decision", String(16), nullable=False),
+    # The requested amount is part of the decision, not just an input to it.
+    # It is stored explicitly because feature selection dropped AMT_CREDIT from
+    # the spec, so the feature vector alone cannot reconstruct it.
+    Column("exposure", Float),
     Column("expected_loss", Float),
     Column("model_version", String(64), nullable=False),
     Column("feature_spec_fingerprint", String(32), nullable=False),

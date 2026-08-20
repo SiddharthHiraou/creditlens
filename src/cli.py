@@ -164,6 +164,78 @@ def warm_cache_cmd() -> None:
 
 
 @app.command()
+def memo(decision_id: str = typer.Argument(..., help="Decision id to draft a memo for.")) -> None:
+    """Draft an adverse action memo for a recorded decision."""
+    import joblib  # noqa: F401 - keeps import cost out of the CLI's fast paths
+
+    from src.api.settings import get_settings
+    from src.api.store import AuditStore
+    from src.llm.memo_agent import generate
+    from src.llm.schemas import MemoInput
+
+    store = AuditStore.connect(get_settings().database_url)
+    record = store.get_decision(decision_id)
+    if record is None:
+        console.print(f"[red]No decision {decision_id}.[/red]")
+        raise typer.Exit(1)
+
+    result = generate(
+        MemoInput(
+            decision_id=decision_id,
+            decision=record["decision"],
+            score=record["score"],
+            reason_codes=record["reason_codes"],
+            requested_amount=float(record.get("exposure") or 1.0),
+            stated_income_band="not stated",
+        )
+    )
+    console.print(f"[bold]{result.model}[/bold]  offline={result.offline}  ${result.cost_usd:.6f}")
+    console.print(f"\n[bold]Summary[/bold]\n{result.memo.summary}")
+    console.print(f"\n[bold]Detail[/bold]\n{result.memo.detail}")
+    console.print(f"\n[bold]Next steps[/bold]\n{result.memo.next_steps}")
+
+
+@app.command()
+def copilot(question: str = typer.Argument(..., help="Question for the analyst copilot.")) -> None:
+    """Ask the portfolio analyst copilot a question."""
+    from src.llm.copilot_agent import ask
+
+    answer = ask(question)
+    console.print(
+        f"[bold]{answer.model}[/bold]  offline={answer.offline}  "
+        f"tools={[c['tool'] for c in answer.tools_called]}  ${answer.cost_usd:.6f}\n"
+    )
+    console.print(answer.answer)
+
+
+@app.command()
+def flows(
+    which: str = typer.Argument("drift", help="ingest | drift | retrain | promote"),
+    trials: int = typer.Option(100, help="Optuna trials for retrain."),
+) -> None:
+    """Run a Prefect flow locally."""
+    if which == "ingest":
+        from flows.monitoring import ingest_and_validate
+
+        ingest_and_validate()
+    elif which == "drift":
+        from flows.monitoring import compute_drift
+
+        compute_drift()
+    elif which == "retrain":
+        from flows.retraining import retrain_candidate
+
+        retrain_candidate(n_trials=trials)
+    elif which == "promote":
+        from flows.retraining import validate_and_promote
+
+        validate_and_promote()
+    else:
+        console.print(f"[red]Unknown flow {which!r}. Use ingest | drift | retrain | promote.[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def sources() -> None:
     """Show which file each table will be read from."""
     from src.ingestion.loaders import describe_sources

@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type {
-  Applicant, Explainability, Fairness, Monitoring, Portfolio, SimulatorData, Summary,
+  Applicant, Explainability, Fairness, Genai, Monitoring, Portfolio, SimulatorData, Summary,
 } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "public", "data");
@@ -31,3 +31,4 @@ export const getMonitoring = () => read<Monitoring>("monitoring");
 export const getFairness = () => read<Fairness>("fairness");
 export const getApplicants = () => read<Applicant[]>("applicants");
 export const getExplainability = () => read<Explainability>("explainability");
+export const getGenai = () => read<Genai>("genai");
