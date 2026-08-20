@@ -1,0 +1,61 @@
+[project]
+name = "creditlens"
+version = "0.1.0"
+description = "Credit decisioning and model risk platform for consumer lending"
+requires-python = ">=3.12"
+dependencies = [
+    "polars>=1.17",
+    "pyarrow>=18.0",
+    "pandera[polars]>=0.22",
+    "numpy>=2.1",
+    "scikit-learn>=1.6",
+    "scipy>=1.14",
+    "pyyaml>=6.0",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "structlog>=24.4",
+    "typer>=0.15",
+    "rich>=13.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "jupyter>=1.1",
+    "matplotlib>=3.9",
+]
+
+[project.scripts]
+creditlens = "src.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["slow: marks tests as slow"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/__init__.py"]
+
+[tool.ruff.lint.per-file-ignores]
+# pandera's @pa.check decorator injects a classmethod whose first arg must be
+# `cls`; ruff's N805 does not know that.
+"src/ingestion/schemas.py" = ["N805"]
