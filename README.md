@@ -6,14 +6,15 @@ credit score, an approve/decline/refer decision, ECOA-compliant reason codes, an
 an LLM-drafted underwriter memo — with the monitoring, fairness testing and
 governance artifacts a bank model validation team would ask for.
 
-> **Build status: Phases 1-4 of 7 complete.** Data layer, target definition,
+> **Build status: Phases 1-5 of 7 complete.** Data layer, target definition,
 > out-of-time splitting, a 221-feature Polars pipeline, WOE/IV, four model
 > tracks with Optuna and monotonic constraints, smoothed isotonic calibration,
 > PSI/CSI, an MLflow registry, a SHAP service, ECOA reason codes,
 > counterfactual levers, a Fairlearn audit and a FastAPI scoring service with
 > ONNX serving, a Redis feature cache and a Postgres audit log are done, tested
-> and reproducible. The frontend and MLOps flows are not built yet. Everything
-> claimed below is reproducible today.
+> and reproducible, along with a seven-page Next.js dashboard carrying an
+> interactive cutoff simulator. The MLOps flows and the GenAI layer are not
+> built yet. Everything claimed below is reproducible today.
 
 ---
 
@@ -171,7 +172,7 @@ data/synthetic ─┘   (source        (7 contracts,     (90 DPD /     (out-of- 
 | 2 | Polars feature pipeline, WOE/IV, LightGBM + Optuna, challengers, isotonic calibration, MLflow | **done** |
 | 3 | SHAP service, ECOA reason codes, counterfactuals, Fairlearn + mitigation tradeoff | **done** |
 | 4 | FastAPI, ONNX export, Redis, Postgres audit log, load test | **done** |
-| 5 | Next.js frontend, cutoff simulator | not started |
+| 5 | Next.js frontend, cutoff simulator | **done** |
 | 6 | Prefect flows, drift monitoring, promotion gate, memo generator, copilot | not started |
 | 7 | Model card, validation report, credit policy, ADRs, demo | not started |
 
@@ -391,6 +392,50 @@ not have the applicant's bureau record and must not be able to assert one. A
 cache miss is not an error: it means a thin-file applicant, scored with nulls
 exactly as in training, and reported as `history_found: false`.
 
+## The dashboard
+
+```bash
+make demo-data && make ui        # http://localhost:3000
+```
+
+Seven pages, static-exported, driven by JSON snapshots generated from the same
+artifacts the model pipeline produces. No backend needed — the deployed link
+works whether or not anything is running.
+
+| Page | For |
+|---|---|
+| `/` | What the system does and the headline numbers |
+| `/score` | Underwriter: decision, four ECOA reason codes, SHAP contributions |
+| `/portfolio` | Risk manager: cutoff simulator, score distribution, rank ordering, vintages |
+| `/monitoring` | PSI by vintage, per-feature CSI, champion vs challengers |
+| `/fairness` | Group metrics, four-fifths rule, mitigation tradeoff curves |
+| `/model-card` | Intended use, performance, limitations, ethical considerations |
+| `/copilot` | Phase 6 placeholder — deliberately not mocked |
+
+**The cutoff simulator is the demo moment.** Move the slider and approval rate,
+bad rate, expected loss and estimated profit recompute live, along with a profit
+curve that marks the maximum. It runs entirely client-side over a seeded
+4,000-row sample of the out-of-time fold, so it responds instantly — and because
+that sample carries **realised outcomes**, the bad rate it shows is observed
+rather than predicted. It is measuring what would actually have happened at each
+cutoff, not what the model thinks would have.
+
+Server Components by default; client components only for the simulator, the
+applicant picker, the theme toggle and the nav. Dark and light, mobile
+responsive, loading and error states on every data path.
+
+### Two bugs worth naming
+
+**Charts were invisible in background tabs.** Recharts drives its mount
+animation with `requestAnimationFrame`, which does not advance while a tab is
+hidden — so a chart mounted in a background tab renders its axes, never its
+data, and stays that way after you switch to it. Found by rendering the page in
+a hidden tab. Mount animation is now off everywhere.
+
+**The theme background was only on `<body>`.** That leaves the canvas
+transparent above and below it, flashing white during overscroll in dark mode.
+It belongs on `<html>` too.
+
 ## Decision records
 
 - [ADR 0001](docs/adr/0001-out-of-time-splitting.md) — out-of-time splitting, never random
@@ -400,6 +445,7 @@ exactly as in training, and reported as `history_found: false`.
 - [ADR 0005](docs/adr/0005-reason-codes-and-protected-attributes.md) — grouped, deduplicated reason codes blind to protected attributes
 - [ADR 0006](docs/adr/0006-smoothed-isotonic-calibration.md) — why plain isotonic is unusable as a decisioning score
 - [ADR 0007](docs/adr/0007-serving-architecture.md) — ONNX serving, server-side feature cache, append-only audit log
+- [ADR 0008](docs/adr/0008-static-frontend.md) — static export over pre-computed snapshots, client-side simulator
 
 ## Stack decisions so far
 

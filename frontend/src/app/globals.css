@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/* Tailwind v4 configures through CSS. Tokens are defined once here so light
+   and dark are a single source of truth rather than a colour scattered through
+   forty components. */
+@theme {
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d5d9e2;
+  --color-ink-300: #b0b8c8;
+  --color-ink-400: #7c8798;
+  --color-ink-500: #5a6577;
+  --color-ink-600: #434c5c;
+  --color-ink-700: #333a47;
+  --color-ink-800: #1f2530;
+  --color-ink-900: #141821;
+  --color-ink-950: #0c0f15;
+
+  --color-approve: #2f9e6f;
+  --color-refer: #c98a1f;
+  --color-decline: #cf4b4b;
+  --color-accent: #4f7cf7;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --surface: #ffffff;
+  --surface-raised: #f6f7f9;
+  --border: #e2e5eb;
+  --text: #141821;
+  --text-muted: #5a6577;
+  --grid: #e8eaee;
+}
+
+.dark {
+  color-scheme: dark;
+  --surface: #0c0f15;
+  --surface-raised: #141821;
+  --border: #262d3a;
+  --text: #eceef2;
+  --text-muted: #8f99ab;
+  --grid: #222834;
+}
+
+/* The background goes on <html> as well as <body>. Painting only the body
+   leaves the canvas transparent above and below it, which shows as a flash of
+   the wrong colour during overscroll and before first paint — most visible in
+   dark mode, where the fallback is white. */
+html {
+  background: var(--surface);
+}
+
+body {
+  background: var(--surface);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Recharts renders SVG text that Tailwind classes cannot reach. */
+.recharts-cartesian-axis-tick text,
+.recharts-legend-item-text {
+  fill: var(--text-muted) !important;
+  color: var(--text-muted) !important;
+  font-size: 11px;
+}
+.recharts-cartesian-grid line {
+  stroke: var(--grid);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

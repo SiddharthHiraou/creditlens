@@ -40,3 +40,30 @@ jobs:
           .venv/bin/python -m src.cli audit
           .venv/bin/python -m src.cli explain
           .venv/bin/python -m src.cli warm-cache
+          .venv/bin/python -m src.api.export_demo
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: frontend
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+        working-directory: frontend
+
+      # The committed demo snapshots must be enough to build the site. If a
+      # page reaches for data the export does not produce, this fails here
+      # rather than on the deployed link.
+      - name: Build
+        run: npm run build
+        working-directory: frontend

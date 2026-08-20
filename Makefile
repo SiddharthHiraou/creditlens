@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast audit explain warm-cache serve loadtest up down mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -33,6 +33,18 @@ audit:  ## Phase 3: SHAP, ECOA reason codes, counterfactuals, fairness, mitigati
 
 explain:  ## Adverse action reasons + counterfactual levers for one declined applicant
 	$(PY) -m src.cli explain
+
+demo-data:  ## Export the static JSON snapshots the frontend renders from
+	$(PY) -m src.api.export_demo
+
+ui:  ## Run the frontend dev server (http://localhost:3000)
+	cd frontend && npm run dev
+
+ui-build:  ## Static-export the frontend to frontend/out
+	cd frontend && npm install --silent && npm run build
+
+ui-check:  ## Typecheck the frontend
+	cd frontend && npx tsc --noEmit
 
 warm-cache:  ## Precompute applicant history features into the serving cache
 	$(PY) -m src.api.warm_cache
