@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -27,6 +27,12 @@ train:  ## Phase 2: full pipeline, 100 Optuna trials, calibrated champion
 
 train-fast:  ## Same pipeline, 12 trials — smoke test only, do not report these numbers
 	$(PY) -m src.cli train --fast
+
+audit:  ## Phase 3: SHAP, ECOA reason codes, counterfactuals, fairness, mitigation
+	$(PY) -m src.cli audit
+
+explain:  ## Adverse action reasons + counterfactual levers for one declined applicant
+	$(PY) -m src.cli explain
 
 mlflow:  ## Open the MLflow UI against the local run store
 	.venv/bin/mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db

@@ -319,6 +319,7 @@ def _log_mlflow(payload: dict, champion_name: str, model, spec: FeatureSpec) -> 
             registered_model_name="creditlens-pd",
             skops_trusted_types=[
                 "src.models.calibrate.CalibratedModel",
+                "src.models.calibrate.SmoothedIsotonic",
                 "src.models.gbdt.GbdtModel",
                 "src.models.scorecard.Scorecard",
                 "catboost.core.CatBoostClassifier",

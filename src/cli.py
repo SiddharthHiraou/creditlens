@@ -58,6 +58,75 @@ def train(
 
 
 @app.command()
+def audit(
+    approve_rate: float = typer.Option(0.60, help="Target approval rate for the policy cutoff."),
+) -> None:
+    """Phase 3: SHAP, ECOA reason codes, counterfactuals, fairness, mitigation."""
+    from src.models.audit import run
+
+    run(approve_rate=approve_rate)
+
+
+@app.command()
+def explain(
+    applicant: int = typer.Option(None, help="SK_ID_CURR to explain; default is the first decline."),
+) -> None:
+    """Print the adverse action reasons and counterfactual levers for one applicant."""
+    import joblib
+    import numpy as np
+
+    from src.config import ARTIFACTS, SYNTHETIC_SPLIT, SYNTHETIC_TARGET
+    from src.explainability.counterfactuals import CounterfactualSearch, levers_to_frame
+    from src.explainability.reason_codes import default_mapper
+    from src.explainability.shap_service import ShapService
+    from src.features.build import build
+    from src.features.spec import FeatureSpec
+    from src.ingestion.splits import split_by_time
+    from src.ingestion.target import assign_labels_from_dpd, modelling_population
+    from src.models.decision import DecisionPolicy, decide, pd_to_score
+
+    model = joblib.load(ARTIFACTS / "champion_model.joblib")
+    spec = FeatureSpec.load()
+    pop = modelling_population(assign_labels_from_dpd(build().frame, SYNTHETIC_TARGET))
+    splits = split_by_time(pop, SYNTHETIC_SPLIT)
+    train, test = splits.train.collect(), splits.test.collect()
+
+    x_train = spec.matrix(train).to_numpy().astype("float32")
+    x_test = spec.matrix(test).to_numpy().astype("float32")
+    pd_hat = model.predict_pd(x_test)
+    score = pd_to_score(pd_hat)
+    policy = DecisionPolicy.from_approval_rate(score, approve_rate=0.60, refer_rate=0.10)
+    decisions = decide(score, policy)
+
+    if applicant is None:
+        idx = int(np.where(decisions == "decline")[0][0])
+    else:
+        matches = np.where(test["SK_ID_CURR"].to_numpy() == applicant)[0]
+        if not matches.size:
+            console.print(f"[red]No applicant {applicant} in the out-of-time test fold.[/red]")
+            raise typer.Exit(1)
+        idx = int(matches[0])
+
+    console.print(
+        f"[bold]applicant {int(test['SK_ID_CURR'][idx])}[/bold]  "
+        f"PD {pd_hat[idx]:.4f}  score {score[idx]:.0f}  -> [bold]{decisions[idx]}[/bold]  "
+        f"(approve at {policy.approve_at:.0f})"
+    )
+
+    shap_values = ShapService.from_model(model, spec.features).values(x_test[idx : idx + 1])[0]
+    for code in default_mapper().explain(spec.features, shap_values):
+        console.print(f"  {code.rank}. [{code.label}] {code.phrase}")
+
+    if decisions[idx] != "approve":
+        search = CounterfactualSearch.from_reference(model, spec.features, x_train)
+        console.print(
+            levers_to_frame(search.propose_levers(x_test[idx], policy.approve_at)).select(
+                "lever", "magnitude", "score_after", "flips_decision"
+            )
+        )
+
+
+@app.command()
 def features() -> None:
     """Build the feature matrix and report its shape."""
     from src.features.build import build

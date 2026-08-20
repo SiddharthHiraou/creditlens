@@ -1,0 +1,336 @@
+# ECOA / Regulation B adverse action reason codes.
+#
+# Under ECOA and Reg B a declined applicant must receive the *specific principal
+# reasons* for denial. This file is the versioned mapping from model features to
+# the language an applicant actually receives.
+#
+# Three rules this file encodes, all of them compliance requirements rather than
+# modelling preferences:
+#
+# 1. Reasons are grouped into FAMILIES and deduplicated at family level. Four
+#    flavours of "your debt-to-income is high" is one reason, not four, and
+#    returning it four times would deprive the applicant of three real reasons.
+#
+# 2. Features that embed a PROTECTED ATTRIBUTE are never surfaced under their
+#    own name. `EXT_mean_x_age` is the model's single strongest feature, but it
+#    contains age, which is protected under ECOA. It maps to the external-score
+#    family, so the disclosure says what the applicant can act on and never
+#    discloses age as a basis for denial.
+#
+# 3. `suppress: true` features can drive the model but can never appear in a
+#    disclosure at all.
+#
+# version is bumped whenever any phrase changes, because the API logs which
+# version produced each memo.
+
+version: 1
+
+families:
+  external_score:
+    label: Credit bureau score
+    phrase: >-
+      Credit reporting agency score is below the level required for approval
+    actionable: false
+  affordability:
+    label: Debt-to-income
+    phrase: >-
+      Proposed monthly payment is high relative to stated income
+    actionable: true
+  debt_burden:
+    label: Existing obligations
+    phrase: >-
+      Total outstanding debt is high relative to income and available credit
+    actionable: true
+  bureau_delinquency:
+    label: Delinquency on credit file
+    phrase: >-
+      Credit file shows past-due amounts or accounts reported delinquent
+    actionable: true
+  repayment_history:
+    label: Repayment record
+    phrase: >-
+      Record of late or partial payments on prior obligations
+    actionable: true
+  utilisation:
+    label: Revolving balances
+    phrase: >-
+      Revolving account balances are high relative to available credit limits
+    actionable: true
+  credit_experience:
+    label: Credit file depth
+    phrase: >-
+      Length or depth of established credit history is insufficient
+    actionable: false
+  employment_stability:
+    label: Employment record
+    phrase: >-
+      Length of employment is shorter than required for approval
+    actionable: false
+  prior_applications:
+    label: Prior application history
+    phrase: >-
+      Record of recent declined or withdrawn credit applications
+    actionable: false
+  loan_structure:
+    label: Requested terms
+    phrase: >-
+      Requested amount or term is outside the approved range for this profile
+    actionable: true
+  residency_region:
+    label: Regional risk grade
+    phrase: >-
+      Application does not meet requirements for the applicable regional grade
+    actionable: false
+
+# feature -> family. Anything absent is reported under `unmapped` by the
+# validator so a new feature cannot silently reach an applicant with no phrase.
+features:
+  # --- external scores (age-bearing interactions land here deliberately) ---
+  EXT_SOURCE_1: external_score
+  EXT_SOURCE_2: external_score
+  EXT_SOURCE_3: external_score
+  EXT_mean: external_score
+  EXT_min: external_score
+  EXT_max: external_score
+  EXT_spread: external_score
+  EXT_n_present: external_score
+  EXT_all_missing: external_score
+  EXT_1_missing: external_score
+  EXT_2_missing: external_score
+  EXT_3_missing: external_score
+  EXT_mean_x_age: external_score          # contains age; never surfaced as age
+  EXT_mean_x_annuity_ratio: external_score
+
+  # --- affordability ---
+  RATIO_annuity_to_income: affordability
+  RATIO_credit_to_income: affordability
+  RATIO_goods_to_income: affordability
+  RATIO_annuity_to_credit: affordability
+  RATIO_residual_income: affordability
+  RATIO_residual_income_per_member: affordability
+  RATIO_income_per_family_member: affordability
+  AMT_INCOME_TOTAL: affordability
+  XSRC_total_debt_to_income: affordability
+  XSRC_bureau_debt_to_income: affordability
+
+  # --- loan structure ---
+  AMT_CREDIT: loan_structure
+  AMT_ANNUITY: loan_structure
+  AMT_GOODS_PRICE: loan_structure
+  RATIO_credit_to_goods: loan_structure
+  RATIO_implied_term: loan_structure
+  RATIO_downpayment: loan_structure
+  NAME_CONTRACT_TYPE: loan_structure
+  XSRC_new_credit_to_bureau_debt: loan_structure
+  XSRC_credit_to_prev_credit: loan_structure
+  XSRC_annuity_to_prev_annuity: loan_structure
+
+  # --- existing debt ---
+  BURO_debt_total: debt_burden
+  BURO_debt_mean: debt_burden
+  BURO_debt_max: debt_burden
+  BURO_active_debt_total: debt_burden
+  BURO_debt_to_credit: debt_burden
+  BURO_active_debt_to_credit: debt_burden
+  BURO_amt_sum_total: debt_burden
+  BURO_amt_sum_mean: debt_burden
+  BURO_amt_sum_max: debt_burden
+  BURO_active_credit_total: debt_burden
+  BURO_debt_recency_wtd: debt_burden
+  BURO_debt_recency_wtd_norm: debt_burden
+
+  # --- delinquency on file ---
+  BURO_overdue_total: bureau_delinquency
+  BURO_overdue_max: bureau_delinquency
+  BURO_n_overdue_lines: bureau_delinquency
+  BURO_overdue_line_share: bureau_delinquency
+  BURO_days_overdue_max: bureau_delinquency
+  BURO_days_overdue_mean: bureau_delinquency
+  BURO_overdue_to_debt: bureau_delinquency
+  BURO_active_overdue_total: bureau_delinquency
+  BURO_overdue_recency_wtd: bureau_delinquency
+  BURO_prolong_total: bureau_delinquency
+  BB_n_late_total: bureau_delinquency
+  BB_late_share_total: bureau_delinquency
+  BB_max_status: bureau_delinquency
+  BB_mean_status: bureau_delinquency
+  BB_status_slope: bureau_delinquency
+  BB_n_late_3m: bureau_delinquency
+  BB_n_late_6m: bureau_delinquency
+  BB_n_late_12m: bureau_delinquency
+  BB_late_share_3m: bureau_delinquency
+  BB_late_share_6m: bureau_delinquency
+  BB_late_share_12m: bureau_delinquency
+  BB_max_status_3m: bureau_delinquency
+  BB_max_status_6m: bureau_delinquency
+  BB_max_status_12m: bureau_delinquency
+
+  # --- repayment conduct ---
+  INST_n_late_total: repayment_history
+  INST_late_share_total: repayment_history
+  INST_max_days_late: repayment_history
+  INST_mean_days_late: repayment_history
+  INST_std_days_late: repayment_history
+  INST_mean_days_late_when_late: repayment_history
+  INST_n_late_over_30d: repayment_history
+  INST_n_late_over_90d: repayment_history
+  INST_n_short_total: repayment_history
+  INST_short_share_total: repayment_history
+  INST_shortfall_total: repayment_history
+  INST_shortfall_max: repayment_history
+  INST_paid_to_due: repayment_history
+  INST_days_late_slope: repayment_history
+  INST_n_late_6m: repayment_history
+  INST_n_late_12m: repayment_history
+  INST_n_late_24m: repayment_history
+  INST_late_share_6m: repayment_history
+  INST_late_share_12m: repayment_history
+  INST_late_share_24m: repayment_history
+  INST_max_days_late_6m: repayment_history
+  INST_max_days_late_12m: repayment_history
+  INST_max_days_late_24m: repayment_history
+  INST_n_short_6m: repayment_history
+  INST_n_short_12m: repayment_history
+  INST_n_short_24m: repayment_history
+  POS_dpd_max: repayment_history
+  POS_dpd_mean: repayment_history
+  POS_n_dpd_months: repayment_history
+  POS_dpd_share: repayment_history
+  POS_n_dpd_over_30: repayment_history
+  POS_dpd_slope: repayment_history
+
+  # --- revolving utilisation ---
+  CC_util_mean: utilisation
+  CC_util_max: utilisation
+  CC_util_std: utilisation
+  CC_util_latest: utilisation
+  CC_util_slope: utilisation
+  CC_share_months_over_90pct: utilisation
+  CC_n_months_over_limit: utilisation
+  CC_balance_mean: utilisation
+  CC_balance_max: utilisation
+  CC_balance_slope: utilisation
+  CC_util_mean_3m: utilisation
+  CC_util_mean_6m: utilisation
+  CC_util_mean_12m: utilisation
+  CC_util_max_3m: utilisation
+  CC_util_max_6m: utilisation
+  CC_util_max_12m: utilisation
+  CC_util_recent_vs_overall: utilisation
+  CC_payment_to_drawings: utilisation
+  CC_dpd_max: utilisation
+  CC_n_dpd_months: utilisation
+  CC_dpd_share: utilisation
+
+  # --- file depth ---
+  BURO_n_lines: credit_experience
+  BURO_n_active: credit_experience
+  BURO_n_closed: credit_experience
+  BURO_active_share: credit_experience
+  BURO_days_since_first_line: credit_experience
+  BURO_days_since_last_line: credit_experience
+  BURO_n_credit_types: credit_experience
+  BURO_lines_per_year: credit_experience
+  BB_n_months: credit_experience
+  BB_n_lines: credit_experience
+  CC_n_cards: credit_experience
+  CC_n_months: credit_experience
+  POS_n_loans: credit_experience
+  POS_n_months: credit_experience
+  INST_n_loans: credit_experience
+  INST_n_payments: credit_experience
+  FLAG_no_buro_history: credit_experience
+  FLAG_no_prev_history: credit_experience
+  FLAG_no_inst_history: credit_experience
+  FLAG_no_cc_history: credit_experience
+  FLAG_no_pos_history: credit_experience
+
+  # --- employment ---
+  STAB_employed_years: employment_stability
+  STAB_employed_share_of_adult_life: employment_stability
+  STAB_employed_under_1y: employment_stability
+  STAB_employed_over_5y: employment_stability
+  STAB_age_at_employment_start: employment_stability
+  DAYS_EMPLOYED: employment_stability
+  OCCUPATION_TYPE: employment_stability
+
+  # --- prior applications with this lender ---
+  PREV_n_refused: prior_applications
+  PREV_refusal_rate: prior_applications
+  PREV_last_was_refused: prior_applications
+  PREV_n_canceled: prior_applications
+  PREV_n_unused: prior_applications
+  PREV_n_applications: prior_applications
+  PREV_applications_per_year: prior_applications
+  PREV_credit_to_application: prior_applications
+  PREV_days_since_last: prior_applications
+
+  # --- regional grade ---
+  REGION_RATING_CLIENT: residency_region
+
+  # --- completed coverage: every built feature has a family ---
+  BURO_days_credit_mean: credit_experience
+  BURO_days_credit_std: credit_experience
+  BURO_recency_weight_total: credit_experience
+  BURO_n_type_consumer_credit: credit_experience
+  BURO_n_type_credit_card: credit_experience
+  BURO_n_type_car_loan: credit_experience
+  BURO_n_type_mortgage: credit_experience
+  BURO_n_type_microloan: credit_experience
+  BB_closed_share: credit_experience
+  BB_unknown_share: credit_experience
+  INST_days_since_last_due: credit_experience
+  INST_days_since_first_due: credit_experience
+  INST_payments_per_loan: credit_experience
+  POS_completed_share: credit_experience
+  POS_n_active_months: credit_experience
+  POS_days_since_last: credit_experience
+  POS_cnt_future_latest: credit_experience
+  STAB_id_published_years: credit_experience
+  PREV_n_approved: prior_applications
+  PREV_days_since_first: prior_applications
+  PREV_days_decision_mean: prior_applications
+  PREV_amt_application_mean: prior_applications
+  PREV_amt_application_max: prior_applications
+  PREV_amt_application_total: prior_applications
+  PREV_amt_credit_mean: prior_applications
+  PREV_amt_credit_total: prior_applications
+  PREV_amt_annuity_mean: prior_applications
+  PREV_amt_annuity_max: prior_applications
+  PREV_cnt_payment_mean: prior_applications
+  PREV_cnt_payment_max: prior_applications
+  PREV_refused_amt_mean: prior_applications
+  PREV_approved_amt_mean: prior_applications
+  PREV_n_contract_types: prior_applications
+  INST_amt_due_total: debt_burden
+  INST_amt_paid_total: debt_burden
+  INST_amt_due_mean: debt_burden
+  POS_cnt_instalment_mean: debt_burden
+  POS_cnt_instalment_max: debt_burden
+  POS_cnt_future_mean: debt_burden
+  FLAG_OWN_CAR: debt_burden
+  FLAG_OWN_REALTY: debt_burden
+  CC_limit_mean: utilisation
+  CC_limit_max: utilisation
+  CC_drawings_mean: utilisation
+  CC_drawings_total: utilisation
+  CC_payment_mean: utilisation
+  CC_payment_total: utilisation
+  CC_n_dpd_3m: utilisation
+  CC_n_dpd_6m: utilisation
+  CC_n_dpd_12m: utilisation
+  NAME_EDUCATION_TYPE: employment_stability
+
+# Never disclosed, whatever the model does with them. Age, sex and family
+# status are protected or proxy-protected under ECOA; disclosing them as a
+# basis for denial is the violation the reason-code layer exists to prevent.
+suppress:
+  - DAYS_BIRTH
+  - STAB_age_years
+  - STAB_age_band
+  - CODE_GENDER
+  - NAME_FAMILY_STATUS
+  - CNT_CHILDREN
+  - CNT_FAM_MEMBERS
+  - RATIO_children_to_family
+  - DAYS_ID_PUBLISH

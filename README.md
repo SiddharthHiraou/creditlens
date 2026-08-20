@@ -6,12 +6,13 @@ credit score, an approve/decline/refer decision, ECOA-compliant reason codes, an
 an LLM-drafted underwriter memo — with the monitoring, fairness testing and
 governance artifacts a bank model validation team would ask for.
 
-> **Build status: Phases 1-2 of 7 complete.** Data layer, target definition,
+> **Build status: Phases 1-3 of 7 complete.** Data layer, target definition,
 > out-of-time splitting, a 221-feature Polars pipeline, WOE/IV, four model
-> tracks with Optuna and monotonic constraints, isotonic calibration, PSI/CSI
-> and an MLflow registry are done, tested and reproducible. The SHAP layer,
-> API, frontend and MLOps flows are not built yet. Everything claimed below is
-> reproducible today with three commands.
+> tracks with Optuna and monotonic constraints, smoothed isotonic calibration,
+> PSI/CSI, an MLflow registry, a SHAP service, ECOA reason codes,
+> counterfactual levers and a Fairlearn audit are done, tested and
+> reproducible. The API, frontend and MLOps flows are not built yet.
+> Everything claimed below is reproducible today with three commands.
 
 ---
 
@@ -22,12 +23,11 @@ Out-of-time test fold, 16,276 applications, 16.81% bad rate.
 | | Baseline (Phase 1) | Champion (Phase 2) |
 |---|---|---|
 | Model | Logistic, application fields only | CatBoost, calibrated |
-| AUC | 0.7624 | **0.7900** |
-| Gini | 0.5249 | **0.5801** |
-| KS | 0.3818 | **0.4369** |
-| PR-AUC | 0.4360 | 0.4448 |
-| Brier | 0.2066 | **0.1150** |
-| Score PSI (train vs OOT) | — | 0.0175 (stable) |
+| AUC | 0.7624 | **0.7913** |
+| Gini | 0.5249 | **0.5827** |
+| KS | 0.3818 | **0.4349** |
+| Brier | 0.2066 | **0.1148** |
+| Score PSI (train vs OOT) | — | 0.0174 (stable) |
 
 **Rank ordering: monotonic across all 10 deciles**, 53.9% → 1.4% bad rate,
 3.20x lift in decile 1. A model that fails this is not shippable regardless of
@@ -64,18 +64,19 @@ stack is excluded from champion selection anyway — it is fitted on validation
 predictions, so its validation score is optimistic by construction, and serving
 it requires all three bases.
 
-**Calibrated AUC (0.7900) is slightly below raw CatBoost (0.7913).** Isotonic
-regression is a step function, so it introduces ties, and ties cost a little
-AUC. That trade is correct: the ranking loses 0.0013 and the probability
-becomes usable.
+**Calibration now costs no AUC at all** (0.7913, matching the raw model). Plain
+isotonic is a step function: it collapsed 16,091 distinct raw scores into 120
+values and cost 0.0013 AUC in pure ties. Phase 3 replaced it with a smoothed
+variant that keeps the level and restores the ranking — see
+[ADR 0006](docs/adr/0006-smoothed-isotonic-calibration.md).
 
 ### Calibration is the difference between a ranking and a probability
 
 | | Raw | Calibrated |
 |---|---|---|
-| Brier | 0.19590 | **0.11501** |
-| Expected calibration error | 0.26451 | **0.01279** |
-| Mean predicted PD | 0.4326 | **0.1731** |
+| Brier | 0.19590 | **0.11484** |
+| Expected calibration error | 0.26451 | **0.01282** |
+| Mean predicted PD | 0.4326 | **0.1753** |
 | Actual bad rate | 0.1681 | 0.1681 |
 
 `scale_pos_weight` pushed mean predicted PD to 43% against a true bad rate of
@@ -100,7 +101,7 @@ Roughly 6 minutes. For the Phase 1 baseline alone, `make baseline`.
 make test
 ```
 
-104 tests, 72% coverage on `src/`.
+178 tests, 73% coverage on `src/`.
 
 ## Getting the data
 
@@ -167,11 +168,127 @@ data/synthetic ─┘   (source        (7 contracts,     (90 DPD /     (out-of- 
 |---|---|---|
 | 1 | Data layer, Pandera contracts, target, OOT splits, logistic baseline | **done** |
 | 2 | Polars feature pipeline, WOE/IV, LightGBM + Optuna, challengers, isotonic calibration, MLflow | **done** |
-| 3 | SHAP service, ECOA reason codes, counterfactuals, Fairlearn + mitigation tradeoff | not started |
+| 3 | SHAP service, ECOA reason codes, counterfactuals, Fairlearn + mitigation tradeoff | **done** |
 | 4 | FastAPI, ONNX export, Redis, Postgres audit log, load test | not started |
 | 5 | Next.js frontend, cutoff simulator | not started |
 | 6 | Prefect flows, drift monitoring, promotion gate, memo generator, copilot | not started |
 | 7 | Model card, validation report, credit policy, ADRs, demo | not started |
+
+## Explainability and adverse action
+
+`make audit` produces the full report; `make explain` prints one applicant.
+
+**The Phase 3 deliverable: 100% of declines produce exactly four distinct,
+ranked, human-readable reasons.** A real one, straight from the CLI:
+
+```
+applicant 100003  PD 0.2979  score 512  -> decline  (approve at 539)
+  1. [Debt-to-income] Proposed monthly payment is high relative to stated income
+  2. [Repayment record] Record of late or partial payments on prior obligations
+  3. [Delinquency on credit file] Credit file shows past-due amounts or accounts reported delinquent
+  4. [Prior application history] Record of recent declined or withdrawn credit applications
+```
+
+Three properties make that compliant rather than decorative:
+
+**Distinct, not restated.** The top four raw SHAP contributions are usually four
+measurements of one thing. Contributions are summed into 11 ECOA families and
+ranked, so four reasons means four different reasons. Verified across every
+decline: mean 4.00 distinct families, minimum 4.
+
+**Blind to protected attributes.** The model's single strongest feature is
+`EXT_mean_x_age`, which embeds age. It is disclosed as a credit-bureau-score
+reason, never as an age reason, and a suppression list keeps age, sex, family
+status and dependents out of any disclosure. See
+[ADR 0005](docs/adr/0005-reason-codes-and-protected-attributes.md).
+
+**No silent gaps.** All 221 features are either mapped to a family (212) or
+explicitly suppressed (9). A test fails the build if that ever stops being true —
+an unmapped feature would be silently dropped from a legally required disclosure.
+
+SHAP wiring is checked by additivity: `expected_value + sum(shap)` must equal the
+raw margin, and it does to **6.7e-15**. That check earned its place twice —
+it caught a stale cached base value (SHAP mutates `expected_value` after the
+first call) and a dispatch bug where `LGBMClassifier.predict` silently swallowed
+a CatBoost keyword and returned class labels as "margin".
+
+### Counterfactuals: what would have to change
+
+Proposals are expressed as **levers** — one real-world action propagating to
+every model feature it would actually move. Feature selection keeps *ratios*
+rather than raw amounts, so a naive per-feature sweep would propose an incoherent
+applicant who borrows less but repays the same.
+
+| Lever | Moves |
+|---|---|
+| Request a smaller loan | every amount-derived ratio together, plus residual income |
+| Pay down revolving balances | all utilisation and balance measures |
+| Bring past-due balances current | every overdue measure |
+| Repay existing debt | bureau debt levels and debt-to-income |
+
+Past conduct, external scores, employment tenure and every protected attribute
+are **excluded from the search space entirely** — you cannot tell someone to have
+had fewer delinquencies last year.
+
+**The honest result: most declines cannot be reversed by any feasible action.**
+Of 120 declines, 0 flip on a single action and 1 flips on up to three. Median
+achievable gain is 11.7 score points against gaps that are usually larger.
+
+That is not a broken module — it is what the data says, and the segmentation
+confirms the levers target the right things:
+
+| Decline driven by | n | Median score gain | Max |
+|---|---|---|---|
+| Actionable causes (affordability, utilisation, debt) | 19 | **+22.3** | +46.3 |
+| Credit history | 101 | +10.3 | +42.3 |
+
+Applicants declined for reasons they can act on get twice the benefit. For
+everyone else the module says so plainly rather than manufacturing advice.
+
+## Fairness
+
+Full analysis in [docs/fairness_findings.md](docs/fairness_findings.md). Every
+metric is computed twice — once in this repo, once through Fairlearn — and the
+two agree to **0.00e+00**.
+
+| Attribute | Disparate impact | Four-fifths rule | Equal-opportunity gap |
+|---|---|---|---|
+| Gender | 0.9782 | passes | 0.0170 |
+| Age band | **0.3843** | **fails** | 0.4921 |
+
+**The model fails the four-fifths rule on age**, approving the 18-24 band at 38%
+of the rate of the 65+ band. Stated plainly because a fairness section that only
+reports passes is worthless.
+
+Context that belongs alongside it, not instead of it: observed bad rate falls
+monotonically from 26.4% (18-24) to 7.1% (65+), so the model is measuring a real
+difference rather than inventing one — which explains the gap without justifying
+it, since disparate impact is assessed on effect. The model is well calibrated
+*within* every band (largest gap +2.3 points), so it is not systematically wrong
+about any group. And the disparity runs toward younger applicants, so ECOA's
+specific protection for applicants 62 and over is not engaged.
+
+### What mitigation costs
+
+| Approval rate (single group-blind cutoff) | Disparate impact | Bad rate among approved |
+|---|---|---|
+| 40% | 0.2273 | 4.55% |
+| 60% | 0.3843 | 6.73% |
+| 90% | 0.7650 | 12.64% |
+
+Most of the disparity is a property of **where the cutoff sits**, not of the
+ranking — and no legally deployable cutoff reaches 0.80.
+
+Group-specific thresholds do reach parity (DI 0.995) but are **unlawful to
+deploy**: a different cutoff by protected class is disparate treatment even when
+intended to reduce disparate impact. They are run to establish the frontier
+only — and they get there by approving 96% of applicants, more than doubling the
+bad rate among approved from 6.7% to 14.9%. A disparity number read without that
+column would be badly misleading.
+
+**No claim is made that bias was removed.** It was measured, the tradeoff was
+quantified, and the decision is documented — which is what a model risk team
+actually does.
 
 ## Decision records
 
@@ -179,6 +296,8 @@ data/synthetic ─┘   (source        (7 contracts,     (90 DPD /     (out-of- 
 - [ADR 0002](docs/adr/0002-two-datasets-with-separate-roles.md) — why Home Credit and Lending Club serve different roles
 - [ADR 0003](docs/adr/0003-monotonic-constraints.md) — monotonic constraints, and why LightGBM's `basic` method over `advanced`
 - [ADR 0004](docs/adr/0004-two-factor-synthetic-generator.md) — why the generator needed two latent factors
+- [ADR 0005](docs/adr/0005-reason-codes-and-protected-attributes.md) — grouped, deduplicated reason codes blind to protected attributes
+- [ADR 0006](docs/adr/0006-smoothed-isotonic-calibration.md) — why plain isotonic is unusable as a decisioning score
 
 ## Stack decisions so far
 
@@ -205,16 +324,23 @@ src/features/     221-feature pipeline: relational aggregations, ratios, trends,
 src/models/       baseline, WOE scorecard, GBDT champion + challengers, Optuna,
                   isotonic calibration, stacked ensemble, training entrypoint
 src/evaluation/   AUC/Gini/KS/PR-AUC/Brier, decile rank-ordering, PSI/CSI
-src/cli.py        creditlens data | validate | features | baseline | train | sources
-tests/            104 tests across target, splits, metrics, loaders, WOE, PSI,
-                  features, calibration, scorecard, selection, two end-to-end suites
-docs/             target definition (binding), 4 ADRs
+src/explainability/  TreeSHAP service, ECOA reason-code mapper + versioned YAML,
+                  counterfactual levers
+src/fairness/     group metrics, four-fifths rule, Fairlearn cross-check,
+                  mitigation tradeoff curves
+src/cli.py        creditlens data | validate | features | baseline | train |
+                  audit | explain | sources
+tests/            178 tests across target, splits, metrics, loaders, WOE, PSI,
+                  features, calibration, scorecard, selection, decision, reason
+                  codes, SHAP, counterfactuals, fairness, mitigation, ensemble,
+                  tuning, and three end-to-end suites
+docs/             target definition (binding), fairness findings, 6 ADRs
 notebooks/        01_eda.ipynb — exploratory only, never the source of truth
 artifacts/        metrics JSON, champion model, MLflow store (gitignored)
 ```
 
-`explainability/ fairness/ llm/ api/ monitoring/ flows/ frontend/ infra/`
-are scaffolded and empty — they belong to later phases.
+`llm/ api/ monitoring/ flows/ frontend/ infra/` are scaffolded and empty — they
+belong to later phases.
 
 ## The feature pipeline
 

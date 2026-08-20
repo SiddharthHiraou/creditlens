@@ -35,7 +35,24 @@ class StackedEnsemble:
         return self.meta.predict_proba(self._meta_matrix(x))[:, 1]
 
     def weights(self) -> dict[str, float]:
-        return dict(zip(self.base_names, self.meta.coef_[0].tolist(), strict=True))
+        """Meta-learner coefficient per base model.
+
+        Names are disambiguated when two bases share one. Keying a dict on the
+        raw name silently drops a weight whenever the stack holds two models of
+        the same type -- which is a normal thing to do, and which the
+        production lightgbm/xgboost/catboost trio happens to hide.
+        """
+        coefficients = self.meta.coef_[0].tolist()
+        duplicated = {name for name in self.base_names if self.base_names.count(name) > 1}
+        seen: dict[str, int] = {}
+        out: dict[str, float] = {}
+        for name, coef in zip(self.base_names, coefficients, strict=True):
+            if name in duplicated:
+                seen[name] = seen.get(name, 0) + 1
+                out[f"{name}_{seen[name]}"] = coef
+            else:
+                out[name] = coef
+        return out
 
 
 def fit_stack(bases: list, x_meta, y_meta: np.ndarray) -> StackedEnsemble:
