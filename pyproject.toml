@@ -16,6 +16,12 @@ dependencies = [
     "structlog>=24.4",
     "typer>=0.15",
     "rich>=13.9",
+    "joblib>=1.4",
+    "lightgbm>=4.7",
+    "xgboost>=3.0",
+    "catboost>=1.2",
+    "optuna>=4.0",
+    "mlflow>=3.0",
 ]
 
 [project.optional-dependencies]

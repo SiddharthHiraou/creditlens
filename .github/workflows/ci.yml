@@ -36,3 +36,4 @@ jobs:
           .venv/bin/python -m src.cli data --n 25000
           .venv/bin/python -m src.cli validate
           .venv/bin/python -m src.cli baseline
+          .venv/bin/python -m src.cli train --fast --no-mlflow
