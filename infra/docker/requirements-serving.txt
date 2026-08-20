@@ -1,0 +1,26 @@
+# Serving dependencies.
+#
+# Absent by design: lightgbm, xgboost, optuna, mlflow, pandera, matplotlib,
+# fairlearn and the rest of the training and evaluation stack.
+#
+# CatBoost is present, and only for one reason: TreeSHAP needs the tree
+# structure to compute exact per-application attributions, and an ONNX graph
+# does not expose it. Predictions still run through onnxruntime -- roughly 2x
+# faster at batch size 1 -- and CatBoost is loaded solely as the explainer's
+# backing model. Set CREDITLENS_ENABLE_SHAP=false for a decision-only tier that
+# never touches it.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.10
+pydantic-settings>=2.7
+polars>=1.17
+numpy>=2.1
+pyyaml>=6.0
+onnxruntime>=1.20
+scikit-learn>=1.6
+joblib>=1.4
+redis>=5.2
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+shap>=0.46
+catboost>=1.2  # TreeSHAP backing model only; predictions go through ONNX

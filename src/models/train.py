@@ -36,6 +36,7 @@ from src.ingestion.loaders import Source
 from src.ingestion.splits import assert_no_temporal_leakage, split_by_time, vintage_column
 from src.ingestion.target import assign_labels_from_dpd, modelling_population
 from src.models.calibrate import calibrate, calibration_report, calibration_table
+from src.models.decision import pd_to_score
 from src.models.ensemble import fit_stack
 from src.models.gbdt import fit_catboost, fit_lightgbm, fit_xgboost, to_matrix
 from src.models.scorecard import fit_scorecard
@@ -247,6 +248,17 @@ def run(
         "decile_table_oot": deciles.to_dicts(),
         "stack_weights": stack.weights(),
     }
+    # Serving artifacts: the out-of-time fold with realised outcomes, which the
+    # cutoff simulator needs, plus the training PD distribution the drift
+    # endpoint measures against.
+    np.savez_compressed(
+        ARTIFACTS / "serving_holdout.npz",
+        score=np.asarray(pd_to_score(cal_test), dtype=float),
+        y=y["test"].astype(int),
+        exposure=test["AMT_CREDIT"].to_numpy().astype(float),
+        train_pd=np.asarray(calibrated.predict_pd(x["train"] if is_gbdt else train), dtype=float),
+    )
+
     (ARTIFACTS / "phase2_metrics.json").write_text(json.dumps(payload, indent=2, default=str))
     joblib.dump(calibrated, ARTIFACTS / "champion_model.joblib")
     feature_csi.write_parquet(ARTIFACTS / "feature_csi.parquet")

@@ -22,6 +22,15 @@ dependencies = [
     "catboost>=1.2",
     "optuna>=4.0",
     "mlflow>=3.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic-settings>=2.7",
+    "redis>=5.2",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "onnxruntime>=1.20",
+    "shap>=0.46",
+    "fairlearn>=0.12",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +41,10 @@ dev = [
     "mypy>=1.13",
     "jupyter>=1.1",
     "matplotlib>=3.9",
+    "httpx>=0.28",
+    "locust>=2.30",
+    "onnx>=1.17",
+    "skl2onnx>=1.17",
 ]
 
 [project.scripts]
@@ -60,6 +73,19 @@ markers = ["slow: marks tests as slow"]
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/__init__.py"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom is a call in the argument default.
+# These are evaluated once at import and are not the mutable-default hazard
+# B008 exists to catch.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Security",
+]
 
 [tool.ruff.lint.per-file-ignores]
 # pandera's @pa.check decorator injects a classmethod whose first arg must be

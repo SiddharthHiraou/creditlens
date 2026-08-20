@@ -1,0 +1,41 @@
+# Serving image.
+#
+# Predictions run through ONNX Runtime, ~2x faster than native predict at batch
+# size 1. The training stack -- LightGBM, XGBoost, Optuna, MLflow, Pandera,
+# Fairlearn -- is deliberately absent.
+#
+# CatBoost is the one exception, and it earns its place honestly: TreeSHAP needs
+# the tree structure to produce exact attributions and an ONNX graph does not
+# expose it, so the explainer needs the booster even though scoring does not.
+# See requirements-serving.txt.
+FROM python:3.12-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgomp1 curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY infra/docker/requirements-serving.txt ./requirements-serving.txt
+RUN pip install --no-cache-dir -r requirements-serving.txt
+
+COPY src ./src
+COPY data/feature_spec.yaml ./data/feature_spec.yaml
+COPY artifacts/champion.onnx ./artifacts/champion.onnx
+COPY artifacts/champion_model.joblib ./artifacts/champion_model.joblib
+COPY artifacts/phase2_metrics.json ./artifacts/phase2_metrics.json
+COPY artifacts/serving_holdout.npz ./artifacts/serving_holdout.npz
+
+# Run unprivileged. A container that does not need root should not have it.
+RUN useradd --create-home --uid 10001 appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8000
+HEALTHCHECK --interval=15s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -fsS http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

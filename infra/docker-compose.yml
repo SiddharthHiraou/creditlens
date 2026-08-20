@@ -1,0 +1,80 @@
+# One `docker compose up` brings the whole system alive.
+#
+#   docker compose -f infra/docker-compose.yml up --build
+#   curl -s localhost:8000/health
+#
+# Requires the champion to have been trained first (`make train`), because the
+# API image bakes in the ONNX model and the feature spec.
+
+name: creditlens
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: creditlens
+      POSTGRES_PASSWORD: creditlens
+      POSTGRES_DB: creditlens
+    ports:
+      # 5433 on the host: 5432 is very often already taken by a local Postgres,
+      # and a compose file that refuses to start on a developer machine is not
+      # a working compose file. Inside the network the port is still 5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U creditlens -d creditlens"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6380:6379"  # same reasoning as Postgres above
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      CREDITLENS_DATABASE_URL: postgresql+psycopg://creditlens:creditlens@postgres:5432/creditlens
+      CREDITLENS_REDIS_URL: redis://redis:6379/0
+      CREDITLENS_ENVIRONMENT: docker
+      # Redis is shared and warmed out of band, so the per-worker in-process
+      # warm is both unnecessary and wrong here.
+      CREDITLENS_WARM_CACHE_ON_STARTUP: "false"
+      # The in-process limiter is per worker, so the effective ceiling is this
+      # times the worker count. Set generously here so the compose stack can be
+      # benchmarked; a real deployment moves the counter into Redis.
+      CREDITLENS_RATE_LIMIT_PER_MINUTE: "1000000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.1.0
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    ports:
+      # 5001 on the host: macOS binds 5000 to the AirPlay Receiver by default,
+      # so a compose file using it fails on most Macs.
+      - "5001:5000"
+    volumes:
+      - mlflowdata:/mlflow
+
+volumes:
+  pgdata:
+  mlflowdata:

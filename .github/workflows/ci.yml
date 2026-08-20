@@ -39,3 +39,4 @@ jobs:
           .venv/bin/python -m src.cli train --fast --no-mlflow
           .venv/bin/python -m src.cli audit
           .venv/bin/python -m src.cli explain
+          .venv/bin/python -m src.cli warm-cache

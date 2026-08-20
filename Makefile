@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast audit explain mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain warm-cache serve loadtest up down mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -33,6 +33,22 @@ audit:  ## Phase 3: SHAP, ECOA reason codes, counterfactuals, fairness, mitigati
 
 explain:  ## Adverse action reasons + counterfactual levers for one declined applicant
 	$(PY) -m src.cli explain
+
+warm-cache:  ## Precompute applicant history features into the serving cache
+	$(PY) -m src.api.warm_cache
+
+serve:  ## Run the API (http://localhost:8000/docs)
+	.venv/bin/uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 1
+
+loadtest:  ## Headless Locust run: 50 users, 60s, against a running server
+	.venv/bin/locust -f loadtest/locustfile.py --headless -u 50 -r 10 -t 60s \
+		--host http://localhost:8000 --csv artifacts/loadtest
+
+up:  ## Bring up API, Postgres, Redis and MLflow with docker compose
+	docker compose -f infra/docker-compose.yml up --build
+
+down:  ## Tear the stack down
+	docker compose -f infra/docker-compose.yml down -v
 
 mlflow:  ## Open the MLflow UI against the local run store
 	.venv/bin/mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db

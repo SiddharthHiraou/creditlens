@@ -6,13 +6,14 @@ credit score, an approve/decline/refer decision, ECOA-compliant reason codes, an
 an LLM-drafted underwriter memo — with the monitoring, fairness testing and
 governance artifacts a bank model validation team would ask for.
 
-> **Build status: Phases 1-3 of 7 complete.** Data layer, target definition,
+> **Build status: Phases 1-4 of 7 complete.** Data layer, target definition,
 > out-of-time splitting, a 221-feature Polars pipeline, WOE/IV, four model
 > tracks with Optuna and monotonic constraints, smoothed isotonic calibration,
 > PSI/CSI, an MLflow registry, a SHAP service, ECOA reason codes,
-> counterfactual levers and a Fairlearn audit are done, tested and
-> reproducible. The API, frontend and MLOps flows are not built yet.
-> Everything claimed below is reproducible today with three commands.
+> counterfactual levers, a Fairlearn audit and a FastAPI scoring service with
+> ONNX serving, a Redis feature cache and a Postgres audit log are done, tested
+> and reproducible. The frontend and MLOps flows are not built yet. Everything
+> claimed below is reproducible today.
 
 ---
 
@@ -101,7 +102,7 @@ Roughly 6 minutes. For the Phase 1 baseline alone, `make baseline`.
 make test
 ```
 
-178 tests, 73% coverage on `src/`.
+210 tests, 77% coverage on `src/`.
 
 ## Getting the data
 
@@ -169,7 +170,7 @@ data/synthetic ─┘   (source        (7 contracts,     (90 DPD /     (out-of- 
 | 1 | Data layer, Pandera contracts, target, OOT splits, logistic baseline | **done** |
 | 2 | Polars feature pipeline, WOE/IV, LightGBM + Optuna, challengers, isotonic calibration, MLflow | **done** |
 | 3 | SHAP service, ECOA reason codes, counterfactuals, Fairlearn + mitigation tradeoff | **done** |
-| 4 | FastAPI, ONNX export, Redis, Postgres audit log, load test | not started |
+| 4 | FastAPI, ONNX export, Redis, Postgres audit log, load test | **done** |
 | 5 | Next.js frontend, cutoff simulator | not started |
 | 6 | Prefect flows, drift monitoring, promotion gate, memo generator, copilot | not started |
 | 7 | Model card, validation report, credit policy, ADRs, demo | not started |
@@ -290,6 +291,106 @@ column would be badly misleading.
 quantified, and the decision is documented — which is what a model risk team
 actually does.
 
+## The API
+
+```bash
+make train && make warm-cache && make serve   # http://localhost:8000/docs
+```
+
+or the whole stack — API, Postgres, Redis, MLflow — in containers:
+
+```bash
+make up
+```
+
+```bash
+curl -s -X POST localhost:8000/v1/score \
+  -H "X-API-Key: demo-key-underwriter" -H "Content-Type: application/json" \
+  -d @artifacts/one_payload.json
+```
+
+```
+pd 0.2979 | score 511.9 | decision decline | latency_ms 9.4
+reasons: Debt-to-income, Repayment record, Delinquency on credit file, Prior application history
+```
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /v1/score` | Single application → PD, score, decision, reason codes, SHAP |
+| `POST /v1/score/batch` | Up to 1000 applications, async with a job id |
+| `GET /v1/score/batch/{id}` | Batch status and results |
+| `GET /v1/decisions/{id}` | Full audit record: inputs, features, model version, overrides |
+| `POST /v1/decisions/{id}/override` | Underwriter override with mandatory justification |
+| `GET /v1/model/metadata` | Active version, feature list, performance snapshot |
+| `GET /v1/monitoring/drift` | PSI of served decisions against the training baseline |
+| `POST /v1/simulate/cutoff` | Approval rate, bad rate, expected loss, profit at a cutoff |
+| `GET /v1/simulate/cutoff/curve` | Profit across the cutoff range, and the maximum |
+| `GET /health` `GET /ready` | Liveness and readiness |
+
+API key auth, per-key rate limiting, structured JSON logs with an `X-Request-ID`
+on every response, and OpenAPI docs at `/docs`.
+
+### Latency
+
+ONNX Runtime at batch size 1, against native CatBoost `predict`:
+
+| | mean | p50 | p99 |
+|---|---|---|---|
+| Native CatBoost | 0.194ms | 0.176ms | 0.472ms |
+| **ONNX Runtime** | 0.103ms | 0.095ms | **0.169ms** |
+
+Agreement is 3.1e-06 — float32 rounding.
+
+End-to-end, measured with **Locust against a live uvicorn server** (4 workers,
+Postgres, Redis), not `TestClient`:
+
+| Concurrent users | p50 | p95 | p99 | req/s |
+|---|---|---|---|---|
+| 16 | 13ms | 29ms | **46ms** | ~265 |
+| 24 | 27ms | 79ms | **110ms** | ~286 |
+| 32 | 33ms | 130ms | 170ms | ~330 |
+
+**p99 stays under the 150ms target to ~24 concurrent users on one 4-worker
+machine.** Past that the box saturates — and the honest caveat is that Locust
+runs on the same 8-core laptop, so above ~24 users the load generator is
+competing with the service for cores and the number stops being about the API.
+
+The dominant cost is SHAP, not the model: **6.63ms of a 7.20ms request**, against
+0.08ms for the prediction itself. Since an approval needs no adverse action
+reasons, the decision is computed first and the explanation runs only when it is
+needed:
+
+| `explain` | p50 wall | p99 wall |
+|---|---|---|
+| `auto` (default) | 3.51ms | 10.94ms |
+| `always` | 9.27ms | 12.06ms |
+| `never` | 2.53ms | 3.29ms |
+
+### Three things worth knowing before trusting these numbers
+
+**SQLite does not survive concurrency, and it showed.** With four workers
+writing to one SQLite file, adding workers bought almost nothing — p99 74ms
+against 85ms on a single worker, because they serialize on the writer lock.
+Swapping in Postgres took the same test to 46ms. SQLite is the zero-setup dev
+fallback; Postgres is the deployment path.
+
+**The rate limiter is in-process**, so with N workers the effective ceiling is N
+times the configured limit. Fine for a demo, wrong for production, where the
+counter belongs in Redis.
+
+**Throttled requests are counted as failures in the load test, deliberately.** A
+429 returns in about a millisecond, so folding them into the success bucket makes
+a saturated service look fast — an early run reported a 3ms p50 that was almost
+entirely the rate limiter rejecting traffic.
+
+### What the caller does and does not send
+
+The request carries application-level fields only. The 161 relational history
+features are looked up server-side by `sk_id_curr` from Redis — the client does
+not have the applicant's bureau record and must not be able to assert one. A
+cache miss is not an error: it means a thin-file applicant, scored with nulls
+exactly as in training, and reported as `history_found: false`.
+
 ## Decision records
 
 - [ADR 0001](docs/adr/0001-out-of-time-splitting.md) — out-of-time splitting, never random
@@ -298,6 +399,7 @@ actually does.
 - [ADR 0004](docs/adr/0004-two-factor-synthetic-generator.md) — why the generator needed two latent factors
 - [ADR 0005](docs/adr/0005-reason-codes-and-protected-attributes.md) — grouped, deduplicated reason codes blind to protected attributes
 - [ADR 0006](docs/adr/0006-smoothed-isotonic-calibration.md) — why plain isotonic is unusable as a decisioning score
+- [ADR 0007](docs/adr/0007-serving-architecture.md) — ONNX serving, server-side feature cache, append-only audit log
 
 ## Stack decisions so far
 
@@ -328,19 +430,26 @@ src/explainability/  TreeSHAP service, ECOA reason-code mapper + versioned YAML,
                   counterfactual levers
 src/fairness/     group metrics, four-fifths rule, Fairlearn cross-check,
                   mitigation tradeoff curves
+src/api/          FastAPI app: schemas, auth, rate limiting, structured logs,
+                  ONNX scorer, Redis feature cache, Postgres audit log, routers
 src/cli.py        creditlens data | validate | features | baseline | train |
-                  audit | explain | sources
-tests/            178 tests across target, splits, metrics, loaders, WOE, PSI,
+                  audit | explain | warm-cache | serve | sources
+tests/            210 tests across target, splits, metrics, loaders, WOE, PSI,
                   features, calibration, scorecard, selection, decision, reason
                   codes, SHAP, counterfactuals, fairness, mitigation, ensemble,
-                  tuning, and three end-to-end suites
+                  tuning, API contracts, and four end-to-end suites
 docs/             target definition (binding), fairness findings, 6 ADRs
 notebooks/        01_eda.ipynb — exploratory only, never the source of truth
 artifacts/        metrics JSON, champion model, MLflow store (gitignored)
 ```
 
-`llm/ api/ monitoring/ flows/ frontend/ infra/` are scaffolded and empty — they
-belong to later phases.
+```
+infra/            Dockerfile, docker-compose (API + Postgres + Redis + MLflow)
+loadtest/         Locust scenarios
+```
+
+`llm/ monitoring/ flows/ frontend/` are scaffolded and empty — they belong to
+later phases.
 
 ## The feature pipeline
 

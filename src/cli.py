@@ -69,7 +69,9 @@ def audit(
 
 @app.command()
 def explain(
-    applicant: int = typer.Option(None, help="SK_ID_CURR to explain; default is the first decline."),
+    applicant: int = typer.Option(
+        None, help="SK_ID_CURR to explain; default is the first decline."
+    ),
 ) -> None:
     """Print the adverse action reasons and counterfactual levers for one applicant."""
     import joblib
@@ -137,6 +139,28 @@ def features() -> None:
         f"{df.height:,} applicants x [bold]{fm.n_features}[/bold] features "
         f"({len(fm.categorical_names)} categorical)"
     )
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", help="Bind address."),
+    port: int = typer.Option(8000, help="Port."),
+    reload: bool = typer.Option(False, help="Auto-reload on source changes."),
+) -> None:
+    """Run the scoring API."""
+    import uvicorn
+
+    uvicorn.run("src.api.main:app", host=host, port=port, reload=reload, log_config=None)
+
+
+@app.command(name="warm-cache")
+def warm_cache_cmd() -> None:
+    """Precompute applicant history features into the serving cache."""
+    from src.api.warm_cache import warm, write_sample_payloads
+
+    written, n_features, backend = warm()
+    console.print(f"cached {written:,} applicants x {n_features} history features -> {backend}")
+    console.print(f"wrote {write_sample_payloads()} sample payloads for the load test")
 
 
 @app.command()
