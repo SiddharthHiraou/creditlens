@@ -46,6 +46,31 @@ def baseline() -> None:
 
 
 @app.command()
+def train(
+    trials: int = typer.Option(100, help="Optuna trials for the LightGBM search."),
+    fast: bool = typer.Option(False, help="12 trials — for smoke tests, not for reporting."),
+    mlflow: bool = typer.Option(True, help="Log the run and register the champion."),
+) -> None:
+    """Phase 2: features, selection, four model tracks, calibrated champion."""
+    from src.models.train import run
+
+    run(n_trials=trials, use_mlflow=mlflow, fast=fast)
+
+
+@app.command()
+def features() -> None:
+    """Build the feature matrix and report its shape."""
+    from src.features.build import build
+
+    fm = build()
+    df = fm.frame.collect()
+    console.print(
+        f"{df.height:,} applicants x [bold]{fm.n_features}[/bold] features "
+        f"({len(fm.categorical_names)} categorical)"
+    )
+
+
+@app.command()
 def sources() -> None:
     """Show which file each table will be read from."""
     from src.ingestion.loaders import describe_sources

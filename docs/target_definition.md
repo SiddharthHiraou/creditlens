@@ -98,7 +98,11 @@ inventing a date:
 - **Lending Club** carries a real `issue_d` and is the backbone for **out-of-time
   evaluation, vintage analysis and PSI**.
 - **The synthetic generator** emits a real origination calendar, so the
-  out-of-time machinery is exercisable before either download lands.
+  out-of-time machinery is exercisable before either download lands. It carries
+  **two** latent risk factors — credit risk and behavioural risk — so repayment
+  history adds genuine incremental signal over the application fields rather
+  than restating them. See [ADR 0004](adr/0004-two-factor-synthetic-generator.md);
+  this revision changed Phase 1's reported baseline numbers.
 
 Anyone claiming a clean out-of-time split on raw Home Credit either invented a
 date or leaked one. This is a likely interview question and the answer is above.

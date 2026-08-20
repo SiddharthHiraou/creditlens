@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline train test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -19,7 +19,17 @@ validate:  ## Enforce every Pandera contract
 baseline:  ## Train + evaluate the Phase 1 logistic baseline
 	$(PY) -m src.cli baseline
 
-train: baseline  ## Alias for the current champion training path (Phase 1: baseline)
+features:  ## Build the feature matrix and report its shape
+	$(PY) -m src.cli features
+
+train:  ## Phase 2: full pipeline, 100 Optuna trials, calibrated champion
+	$(PY) -m src.cli train
+
+train-fast:  ## Same pipeline, 12 trials — smoke test only, do not report these numbers
+	$(PY) -m src.cli train --fast
+
+mlflow:  ## Open the MLflow UI against the local run store
+	.venv/bin/mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db
 
 test:  ## Run the test suite
 	$(PY) -m pytest tests -q
@@ -36,5 +46,5 @@ fmt:  ## Auto-format
 	$(PY) -m ruff check --fix src tests
 
 clean:  ## Remove generated artifacts and caches
-	rm -rf artifacts/* data/synthetic/*.parquet .pytest_cache .ruff_cache .coverage
+	rm -rf artifacts/* data/synthetic/*.parquet data/feature_spec.yaml .pytest_cache .ruff_cache .coverage
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +

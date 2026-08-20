@@ -15,9 +15,20 @@ for this project's purposes:
 * ``application`` carries ``max_dpd_in_window``, the observed delinquency
   depth, so the target rule is applied rather than assumed.
 
-A single latent risk factor per applicant drives the application attributes,
-the bureau history and the repayment behaviour, so relational aggregations
-carry genuine signal and Phase 2 feature work is not chasing noise.
+**Two** latent factors per applicant, which is the point:
+
+* ``credit_risk`` drives the application attributes and the external bureau
+  scores (``EXT_SOURCE_*``).
+* ``behavioural_risk`` drives repayment conduct -- delinquency in the monthly
+  bureau status, late and short installments, revolving utilisation creep --
+  and is only weakly correlated with the first.
+
+Both contribute to the default outcome. A single shared factor was the original
+design and it was wrong: it made every relational aggregation a noisy restatement
+of ``EXT_SOURCE``, so the Phase 2 feature pipeline could not add anything on top
+of the application fields. Real lenders build repayment-history aggregations
+precisely because conduct carries information a stale external score does not.
+The two-factor structure reproduces that, so feature work is measurable.
 """
 
 from __future__ import annotations
@@ -79,13 +90,19 @@ def generate(cfg: SyntheticConfig | None = None) -> dict[str, pl.DataFrame]:
     ids = np.arange(100_001, 100_001 + n, dtype=np.int64)
 
     # ---- latent risk -----------------------------------------------------
+    # Factor 1: credit risk, visible to the bureau and priced into EXT_SOURCE_*.
     z = rng.normal(size=n)
+    # Factor 2: behavioural risk, expressed only in how the applicant actually
+    # services debt. Correlated with factor 1 but far from redundant -- the
+    # 0.35 loading is what leaves room for repayment history to add signal.
+    behaviour = 0.35 * z + np.sqrt(1 - 0.35**2) * rng.normal(size=n)
     origination = _dates(rng, n, cfg)
     orig_year = origination.astype("datetime64[Y]").astype(int) + 1970
     # A vintage effect: the 2022 cohort underwrites worse. This gives drift
     # and vintage analysis something true to find later.
     vintage_shift = np.where(orig_year == 2022, 0.25, 0.0)
     risk = z + vintage_shift
+    behavioural_risk = behaviour + vintage_shift
 
     # ---- application table ----------------------------------------------
     age_years = np.clip(rng.normal(43, 11, n) - 2.5 * risk, 21, 69)
@@ -146,7 +163,8 @@ def generate(cfg: SyntheticConfig | None = None) -> dict[str, pl.DataFrame]:
     intercept = np.log(cfg.base_bad_rate / (1 - cfg.base_bad_rate))
     logit = (
         intercept
-        + 0.95 * risk
+        + 0.72 * risk
+        + 0.62 * behavioural_risk
         + 2.4 * (dti - np.nanmean(dti))
         + 0.55 * (ltv - 1.0)
         - 0.020 * (age_years - 43)
@@ -173,26 +191,31 @@ def generate(cfg: SyntheticConfig | None = None) -> dict[str, pl.DataFrame]:
     )
 
     tables = {"application": application}
-    tables.update(_bureau_tables(rng, ids, risk, origination))
-    tables.update(_previous_tables(rng, ids, risk))
+    # Volume of history scales with credit risk; *conduct* within that history
+    # is governed by the behavioural factor.
+    tables.update(_bureau_tables(rng, ids, risk, behavioural_risk))
+    tables.update(_previous_tables(rng, ids, risk, behavioural_risk))
     return tables
 
 
 def _bureau_tables(
-    rng: np.random.Generator, ids: np.ndarray, risk: np.ndarray, origination: np.ndarray
+    rng: np.random.Generator,
+    ids: np.ndarray,
+    risk: np.ndarray,
+    conduct: np.ndarray,
 ) -> dict[str, pl.DataFrame]:
     # Riskier applicants carry more prior credit lines; thin files exist too.
     n_lines = rng.poisson(np.clip(4.0 + 1.1 * risk, 0.3, None)).astype(int)
     total = int(n_lines.sum())
     owner = np.repeat(ids, n_lines)
-    owner_risk = np.repeat(risk, n_lines)
+    owner_conduct = np.repeat(conduct, n_lines)
     bureau_id = np.arange(500_001, 500_001 + total, dtype=np.int64)
 
     days_credit = -rng.uniform(30, 2900, total).astype(np.int32)
     active = rng.random(total) < 0.42
     amt_sum = np.exp(rng.normal(11.6, 1.0, total)).round(-1)
     debt = np.where(active, amt_sum * rng.uniform(0.05, 1.05, total), 0.0).round(-1)
-    overdue_flag = rng.random(total) < np.clip(0.05 + 0.05 * owner_risk, 0.005, 0.6)
+    overdue_flag = rng.random(total) < np.clip(0.05 + 0.06 * owner_conduct, 0.005, 0.6)
     overdue_amt = np.where(overdue_flag, amt_sum * rng.uniform(0.01, 0.35, total), 0.0).round(-1)
 
     bureau = pl.DataFrame(
@@ -217,9 +240,9 @@ def _bureau_tables(
     # features that carry the most lift in the real dataset.
     months = rng.integers(6, 49, total)
     bb_bureau = np.repeat(bureau_id, months)
-    bb_risk = np.repeat(owner_risk, months)
+    bb_conduct = np.repeat(owner_conduct, months)
     bb_month = -np.concatenate([np.arange(m) for m in months]).astype(np.int32)
-    p_late = np.clip(0.04 + 0.045 * bb_risk, 0.002, 0.65)
+    p_late = np.clip(0.04 + 0.055 * bb_conduct, 0.002, 0.65)
     draw = rng.random(bb_month.size)
     status = np.where(
         draw < p_late * 0.45,
@@ -239,12 +262,16 @@ def _bureau_tables(
 
 
 def _previous_tables(
-    rng: np.random.Generator, ids: np.ndarray, risk: np.ndarray
+    rng: np.random.Generator,
+    ids: np.ndarray,
+    risk: np.ndarray,
+    conduct: np.ndarray,
 ) -> dict[str, pl.DataFrame]:
     n_prev = rng.poisson(np.clip(3.2 + 0.5 * risk, 0.2, None)).astype(int)
     total = int(n_prev.sum())
     owner = np.repeat(ids, n_prev)
     owner_risk = np.repeat(risk, n_prev)
+    owner_conduct = np.repeat(conduct, n_prev)
     prev_id = np.arange(900_001, 900_001 + total, dtype=np.int64)
 
     p_refused = np.clip(0.14 + 0.08 * owner_risk, 0.01, 0.85)
@@ -279,7 +306,7 @@ def _previous_tables(
     )
 
     approved = prev_id[status == "Approved"]
-    appr_risk = owner_risk[status == "Approved"]
+    appr_risk = owner_conduct[status == "Approved"]
     appr_owner = owner[status == "Approved"]
 
     # installments_payments: the source of late-payment counts and payment

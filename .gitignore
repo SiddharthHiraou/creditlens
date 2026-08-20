@@ -22,7 +22,9 @@ venv/
 htmlcov/
 
 # ML
+artifacts/
 mlruns/
+mlflow.db
 mlartifacts/
 *.onnx
 *.pkl

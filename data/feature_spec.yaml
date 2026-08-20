@@ -1,0 +1,420 @@
+version: 1
+created_at: '2026-08-20T18:36:15+00:00'
+n_features: 72
+features:
+- AMT_INCOME_TOTAL
+- REGION_RATING_CLIENT
+- DAYS_BIRTH
+- EXT_SOURCE_2
+- RATIO_annuity_to_income
+- RATIO_credit_to_income
+- RATIO_income_per_family_member
+- RATIO_residual_income
+- RATIO_residual_income_per_member
+- STAB_employed_years
+- STAB_age_at_employment_start
+- EXT_mean
+- EXT_max
+- EXT_mean_x_annuity_ratio
+- EXT_mean_x_age
+- BURO_n_closed
+- BURO_active_share
+- BURO_days_credit_mean
+- BURO_amt_sum_mean
+- BURO_overdue_total
+- BURO_n_overdue_lines
+- BURO_overdue_line_share
+- BURO_days_overdue_mean
+- BURO_prolong_total
+- BURO_overdue_recency_wtd
+- BURO_overdue_to_debt
+- BB_n_late_total
+- BB_late_share_total
+- BB_max_status
+- BB_mean_status
+- BB_closed_share
+- BB_status_slope
+- BB_n_late_3m
+- BB_late_share_3m
+- BB_max_status_3m
+- BB_n_late_6m
+- BB_late_share_6m
+- BB_max_status_6m
+- BB_n_late_12m
+- BB_late_share_12m
+- PREV_n_refused
+- PREV_refusal_rate
+- PREV_amt_application_total
+- PREV_amt_annuity_max
+- PREV_credit_to_application
+- PREV_last_was_refused
+- INST_n_late_total
+- INST_late_share_total
+- INST_n_late_over_30d
+- INST_short_share_total
+- INST_shortfall_total
+- INST_shortfall_max
+- INST_n_late_6m
+- INST_late_share_6m
+- INST_max_days_late_6m
+- INST_late_share_12m
+- INST_max_days_late_12m
+- INST_n_late_24m
+- INST_late_share_24m
+- INST_max_days_late_24m
+- INST_paid_to_due
+- CC_util_latest
+- CC_n_dpd_months
+- CC_dpd_share
+- CC_n_dpd_6m
+- CC_util_mean_12m
+- CC_util_recent_vs_overall
+- POS_dpd_max
+- POS_dpd_mean
+- POS_n_dpd_months
+- POS_dpd_share
+- XSRC_annuity_to_prev_annuity
+categorical: []
+monotonic:
+  EXT_SOURCE_2: -1
+  RATIO_annuity_to_income: 1
+  RATIO_credit_to_income: 1
+  RATIO_income_per_family_member: -1
+  RATIO_residual_income: -1
+  RATIO_residual_income_per_member: -1
+  STAB_employed_years: -1
+  EXT_mean: -1
+  EXT_max: -1
+  BURO_overdue_total: 1
+  BURO_n_overdue_lines: 1
+  BURO_overdue_line_share: 1
+  BURO_days_overdue_mean: 1
+  BURO_prolong_total: 1
+  BURO_overdue_to_debt: 1
+  BB_n_late_total: 1
+  BB_late_share_total: 1
+  BB_max_status: 1
+  BB_mean_status: 1
+  BB_n_late_3m: 1
+  BB_late_share_3m: 1
+  BB_max_status_3m: 1
+  BB_n_late_6m: 1
+  BB_late_share_6m: 1
+  BB_max_status_6m: 1
+  BB_n_late_12m: 1
+  BB_late_share_12m: 1
+  PREV_n_refused: 1
+  PREV_refusal_rate: 1
+  PREV_last_was_refused: 1
+  INST_n_late_total: 1
+  INST_late_share_total: 1
+  INST_n_late_over_30d: 1
+  INST_short_share_total: 1
+  INST_shortfall_total: 1
+  INST_shortfall_max: 1
+  INST_late_share_6m: 1
+  INST_late_share_12m: 1
+  INST_late_share_24m: 1
+  INST_paid_to_due: -1
+  CC_util_latest: 1
+  CC_n_dpd_months: 1
+  CC_dpd_share: 1
+  POS_dpd_max: 1
+  POS_dpd_mean: 1
+  POS_n_dpd_months: 1
+  POS_dpd_share: 1
+dtypes:
+  AMT_INCOME_TOTAL: Float64
+  REGION_RATING_CLIENT: Int32
+  DAYS_BIRTH: Int32
+  EXT_SOURCE_2: Float64
+  RATIO_annuity_to_income: Float64
+  RATIO_credit_to_income: Float64
+  RATIO_income_per_family_member: Float64
+  RATIO_residual_income: Float64
+  RATIO_residual_income_per_member: Float64
+  STAB_employed_years: Float64
+  STAB_age_at_employment_start: Float64
+  EXT_mean: Float64
+  EXT_max: Float64
+  EXT_mean_x_annuity_ratio: Float64
+  EXT_mean_x_age: Float64
+  BURO_n_closed: UInt32
+  BURO_active_share: Float64
+  BURO_days_credit_mean: Float64
+  BURO_amt_sum_mean: Float64
+  BURO_overdue_total: Float64
+  BURO_n_overdue_lines: UInt32
+  BURO_overdue_line_share: Float64
+  BURO_days_overdue_mean: Float64
+  BURO_prolong_total: Int32
+  BURO_overdue_recency_wtd: Float64
+  BURO_overdue_to_debt: Float64
+  BB_n_late_total: UInt32
+  BB_late_share_total: Float64
+  BB_max_status: Int32
+  BB_mean_status: Float64
+  BB_closed_share: Float64
+  BB_status_slope: Float64
+  BB_n_late_3m: UInt32
+  BB_late_share_3m: Float64
+  BB_max_status_3m: Int32
+  BB_n_late_6m: UInt32
+  BB_late_share_6m: Float64
+  BB_max_status_6m: Int32
+  BB_n_late_12m: UInt32
+  BB_late_share_12m: Float64
+  PREV_n_refused: UInt32
+  PREV_refusal_rate: Float64
+  PREV_amt_application_total: Float64
+  PREV_amt_annuity_max: Float64
+  PREV_credit_to_application: Float64
+  PREV_last_was_refused: Int8
+  INST_n_late_total: UInt32
+  INST_late_share_total: Float64
+  INST_n_late_over_30d: UInt32
+  INST_short_share_total: Float64
+  INST_shortfall_total: Float64
+  INST_shortfall_max: Float64
+  INST_n_late_6m: UInt32
+  INST_late_share_6m: Float64
+  INST_max_days_late_6m: Int32
+  INST_late_share_12m: Float64
+  INST_max_days_late_12m: Int32
+  INST_n_late_24m: UInt32
+  INST_late_share_24m: Float64
+  INST_max_days_late_24m: Int32
+  INST_paid_to_due: Float64
+  CC_util_latest: Float64
+  CC_n_dpd_months: UInt32
+  CC_dpd_share: Float64
+  CC_n_dpd_6m: UInt32
+  CC_util_mean_12m: Float64
+  CC_util_recent_vs_overall: Float64
+  POS_dpd_max: Int32
+  POS_dpd_mean: Float64
+  POS_n_dpd_months: UInt32
+  POS_dpd_share: Float64
+  XSRC_annuity_to_prev_annuity: Float64
+dropped:
+  PREV_cnt_payment_mean: iv<0.02
+  PREV_amt_application_mean: iv<0.02
+  PREV_amt_annuity_mean: iv<0.02
+  EXT_3_missing: iv<0.02
+  BURO_n_type_microloan: iv<0.02
+  BURO_n_type_car_loan: iv<0.02
+  CC_util_max: iv<0.02
+  PREV_amt_credit_total: iv<0.02
+  BURO_n_type_mortgage: iv<0.02
+  CC_util_std: iv<0.02
+  POS_cnt_future_mean: iv<0.02
+  CC_balance_mean: iv<0.02
+  POS_cnt_instalment_mean: iv<0.02
+  CC_payment_total: iv<0.02
+  CC_payment_mean: iv<0.02
+  CC_drawings_total: iv<0.02
+  INST_amt_due_total: iv<0.02
+  CC_balance_max: iv<0.02
+  POS_cnt_future_latest: iv<0.02
+  INST_payments_per_loan: iv<0.02
+  CC_limit_max: iv<0.02
+  INST_days_since_last_due: iv<0.02
+  POS_n_months: iv<0.02
+  CC_util_mean: iv<0.02
+  INST_amt_due_mean: iv<0.02
+  INST_n_payments: iv<0.02
+  POS_n_active_months: iv<0.02
+  PREV_n_canceled: iv<0.02
+  EXT_1_missing: iv<0.02
+  RATIO_credit_to_goods: iv<0.02
+  RATIO_downpayment: iv<0.02
+  INST_amt_paid_total: iv<0.02
+  CC_drawings_mean: iv<0.02
+  PREV_approved_amt_mean: iv<0.02
+  POS_cnt_instalment_max: iv<0.02
+  CC_n_months: iv<0.02
+  CC_limit_mean: iv<0.02
+  CC_payment_to_drawings: iv<0.02
+  INST_days_since_first_due: iv<0.02
+  PREV_n_approved: iv<0.02
+  INST_n_loans: iv<0.02
+  CC_share_months_over_90pct: iv<0.02
+  POS_n_loans: iv<0.02
+  POS_completed_share: iv<0.02
+  OCCUPATION_TYPE: iv<0.02
+  PREV_n_unused: iv<0.02
+  DAYS_ID_PUBLISH: iv<0.02
+  STAB_id_published_years: iv<0.02
+  FLAG_no_pos_history: iv<0.02
+  POS_days_since_last: iv<0.02
+  CC_n_cards: iv<0.02
+  FLAG_OWN_CAR: iv<0.02
+  FLAG_no_cc_history: iv<0.02
+  NAME_CONTRACT_TYPE: iv<0.02
+  CNT_FAM_MEMBERS: iv<0.02
+  RATIO_children_to_family: iv<0.02
+  NAME_FAMILY_STATUS: iv<0.02
+  CODE_GENDER: iv<0.02
+  CNT_CHILDREN: iv<0.02
+  FLAG_OWN_REALTY: iv<0.02
+  STAB_employed_under_1y: iv<0.02
+  EXT_2_missing: iv<0.02
+  EXT_all_missing: iv<0.02
+  INST_n_late_over_90d: iv<0.02
+  CC_n_months_over_limit: iv<0.02
+  FLAG_no_buro_history: iv<0.02
+  FLAG_no_prev_history: iv<0.02
+  FLAG_no_inst_history: iv<0.02
+  RATIO_goods_to_income: corr>0.95 with RATIO_credit_to_income
+  DAYS_EMPLOYED: corr>0.95 with STAB_employed_years
+  BB_n_lines: corr>0.95 with BURO_n_lines
+  POS_n_dpd_over_30: corr>0.95 with POS_n_dpd_months
+  BURO_overdue_max: corr>0.95 with BURO_overdue_total
+  STAB_age_years: corr>0.95 with DAYS_BIRTH
+  AMT_GOODS_PRICE: corr>0.95 with AMT_CREDIT
+  BURO_active_debt_total: corr>0.95 with BURO_debt_total
+  BURO_debt_max: corr>0.95 with BURO_debt_total
+  STAB_employed_over_5y: no lift over shuffled-target baseline
+  STAB_employed_share_of_adult_life: no lift over shuffled-target baseline
+  BURO_n_type_consumer_credit: no lift over shuffled-target baseline
+  BURO_debt_mean: no lift over shuffled-target baseline
+  PREV_amt_application_max: no lift over shuffled-target baseline
+  PREV_n_applications: no lift over shuffled-target baseline
+  CC_util_slope: no lift over shuffled-target baseline
+  INST_mean_days_late_when_late: no lift over shuffled-target baseline
+  BURO_n_lines: no lift over shuffled-target baseline
+  BURO_amt_sum_max: no lift over shuffled-target baseline
+  BURO_amt_sum_total: no lift over shuffled-target baseline
+  EXT_min: no lift over shuffled-target baseline
+  CC_util_max_12m: no lift over shuffled-target baseline
+  XSRC_new_credit_to_bureau_debt: no lift over shuffled-target baseline
+  EXT_SOURCE_1: no lift over shuffled-target baseline
+  INST_max_days_late: no lift over shuffled-target baseline
+  BURO_active_debt_to_credit: no lift over shuffled-target baseline
+  CC_dpd_max: no lift over shuffled-target baseline
+  INST_mean_days_late: no lift over shuffled-target baseline
+  XSRC_total_debt_to_income: no lift over shuffled-target baseline
+  BURO_debt_recency_wtd_norm: no lift over shuffled-target baseline
+  CC_util_max_6m: no lift over shuffled-target baseline
+  EXT_spread: no lift over shuffled-target baseline
+  BURO_days_since_last_line: no lift over shuffled-target baseline
+  CC_util_mean_6m: no lift over shuffled-target baseline
+  XSRC_credit_to_prev_credit: no lift over shuffled-target baseline
+  POS_dpd_slope: no lift over shuffled-target baseline
+  BURO_n_credit_types: no lift over shuffled-target baseline
+  PREV_days_since_first: no lift over shuffled-target baseline
+  EXT_n_present: no lift over shuffled-target baseline
+  BURO_lines_per_year: no lift over shuffled-target baseline
+  BURO_n_type_credit_card: no lift over shuffled-target baseline
+  AMT_ANNUITY: no lift over shuffled-target baseline
+  CC_util_mean_3m: no lift over shuffled-target baseline
+  BURO_days_credit_std: no lift over shuffled-target baseline
+  RATIO_annuity_to_credit: no lift over shuffled-target baseline
+  INST_n_short_total: no lift over shuffled-target baseline
+  BB_unknown_share: no lift over shuffled-target baseline
+  PREV_applications_per_year: no lift over shuffled-target baseline
+  RATIO_implied_term: no lift over shuffled-target baseline
+  CC_balance_slope: no lift over shuffled-target baseline
+  PREV_days_since_last: no lift over shuffled-target baseline
+  INST_n_late_12m: no lift over shuffled-target baseline
+  PREV_days_decision_mean: no lift over shuffled-target baseline
+  BURO_debt_to_credit: no lift over shuffled-target baseline
+  INST_days_late_slope: no lift over shuffled-target baseline
+  BURO_days_since_first_line: no lift over shuffled-target baseline
+  BURO_days_overdue_max: no lift over shuffled-target baseline
+  EXT_SOURCE_3: no lift over shuffled-target baseline
+  INST_std_days_late: no lift over shuffled-target baseline
+  BURO_recency_weight_total: no lift over shuffled-target baseline
+  BB_n_months: no lift over shuffled-target baseline
+  BURO_active_credit_total: no lift over shuffled-target baseline
+  BURO_debt_total: no lift over shuffled-target baseline
+  PREV_refused_amt_mean: no lift over shuffled-target baseline
+  XSRC_bureau_debt_to_income: no lift over shuffled-target baseline
+  BURO_n_active: no lift over shuffled-target baseline
+  BB_max_status_12m: no lift over shuffled-target baseline
+  BURO_active_overdue_total: no lift over shuffled-target baseline
+  PREV_cnt_payment_max: no lift over shuffled-target baseline
+  INST_n_short_24m: no lift over shuffled-target baseline
+  AMT_CREDIT: no lift over shuffled-target baseline
+  PREV_amt_credit_mean: no lift over shuffled-target baseline
+  BURO_debt_recency_wtd: no lift over shuffled-target baseline
+  CC_n_dpd_12m: no lift over shuffled-target baseline
+  CC_util_max_3m: no lift over shuffled-target baseline
+  INST_n_short_6m: no lift over shuffled-target baseline
+  CC_n_dpd_3m: no lift over shuffled-target baseline
+  PREV_n_contract_types: no lift over shuffled-target baseline
+  INST_n_short_12m: no lift over shuffled-target baseline
+iv:
+  EXT_mean_x_age: 0.619924
+  EXT_mean: 0.574682
+  EXT_SOURCE_2: 0.541783
+  EXT_max: 0.501444
+  BB_n_late_total: 0.499788
+  BB_n_late_12m: 0.448852
+  BB_late_share_total: 0.43549
+  BB_mean_status: 0.410332
+  BB_n_late_6m: 0.371036
+  BB_late_share_12m: 0.354932
+  BB_max_status: 0.341101
+  BB_max_status_6m: 0.306649
+  RATIO_annuity_to_income: 0.305651
+  RATIO_credit_to_income: 0.301749
+  BB_n_late_3m: 0.289677
+  BB_late_share_6m: 0.28456
+  BB_max_status_3m: 0.265642
+  INST_late_share_total: 0.259968
+  RATIO_residual_income: 0.256933
+  RATIO_residual_income_per_member: 0.237138
+  BB_closed_share: 0.236222
+  BB_status_slope: 0.229308
+  INST_short_share_total: 0.224586
+  AMT_INCOME_TOTAL: 0.211255
+  POS_dpd_share: 0.207695
+  BB_late_share_3m: 0.204392
+  INST_paid_to_due: 0.195512
+  STAB_employed_years: 0.187304
+  POS_dpd_mean: 0.185072
+  REGION_RATING_CLIENT: 0.184943
+  INST_shortfall_total: 0.177372
+  POS_n_dpd_months: 0.155645
+  INST_n_late_total: 0.149073
+  BURO_overdue_recency_wtd: 0.145391
+  INST_shortfall_max: 0.144622
+  BURO_overdue_total: 0.143645
+  BURO_days_overdue_mean: 0.140853
+  BURO_overdue_line_share: 0.140213
+  CC_util_mean_12m: 0.137932
+  BURO_overdue_to_debt: 0.137323
+  INST_late_share_24m: 0.137149
+  POS_dpd_max: 0.134465
+  BURO_n_overdue_lines: 0.132809
+  PREV_n_refused: 0.132361
+  RATIO_income_per_family_member: 0.132161
+  CC_util_recent_vs_overall: 0.127469
+  DAYS_BIRTH: 0.125293
+  CC_dpd_share: 0.118706
+  INST_n_late_24m: 0.113526
+  BURO_n_closed: 0.106779
+  INST_max_days_late_24m: 0.097257
+  PREV_refusal_rate: 0.0952
+  XSRC_annuity_to_prev_annuity: 0.093401
+  INST_late_share_12m: 0.078564
+  EXT_mean_x_annuity_ratio: 0.078475
+  INST_max_days_late_12m: 0.078219
+  CC_n_dpd_months: 0.075937
+  PREV_credit_to_application: 0.073024
+  BURO_active_share: 0.064147
+  INST_n_late_over_30d: 0.058917
+  CC_n_dpd_6m: 0.05731
+  INST_n_late_6m: 0.053234
+  INST_late_share_6m: 0.051794
+  INST_max_days_late_6m: 0.051102
+  CC_util_latest: 0.048286
+  BURO_amt_sum_mean: 0.046767
+  BURO_days_credit_mean: 0.046447
+  STAB_age_at_employment_start: 0.04555
+  PREV_last_was_refused: 0.042604
+  BURO_prolong_total: 0.037093
+  PREV_amt_application_total: 0.034224
+  PREV_amt_annuity_max: 0.021207
+fingerprint: 19cc7282140b4dd2
