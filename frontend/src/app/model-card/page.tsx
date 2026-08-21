@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import {
   Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
@@ -174,6 +175,8 @@ export default function ModelCardPage() {
         <Badge>Reason code mapping v{explain.reasonCodes.mapping_version}</Badge>
         <Badge>Feature spec {summary.featureSpecFingerprint}</Badge>
       </div>
+    
+      <NextStep current="/model-card" />
     </Stagger>
   );
 }

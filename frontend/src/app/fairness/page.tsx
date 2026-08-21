@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import {
   CalibrationByGroupChart, MitigationTradeoffChart, SelectionRateChart,
@@ -160,6 +161,8 @@ export default function FairnessPage() {
           card.
         </Note>
       </Card>
+    
+      <NextStep current="/fairness" />
     </Stagger>
   );
 }

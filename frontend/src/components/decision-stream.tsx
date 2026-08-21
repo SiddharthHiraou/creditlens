@@ -28,7 +28,8 @@ type Dot = {
   scored: boolean;
 };
 
-const LANE_COLORS = ["#21c197", "#f0a53a", "#f2545b"] as const;
+// Matches --color-approve / --color-refer / --color-decline in globals.css.
+const LANE_COLORS = ["#2ee6a8", "#ffb44d", "#ff5d6c"] as const;
 const LANE_LABELS = ["Approved", "Referred", "Declined"] as const;
 
 export function DecisionStream({
@@ -154,7 +155,7 @@ export function DecisionStream({
 
       // The gate: where the model makes the call.
       const pulse = 0.5 + 0.5 * Math.sin(frame / 26);
-      ctx.strokeStyle = `rgba(109,124,255,${0.35 + pulse * 0.4})`;
+      ctx.strokeStyle = `rgba(124,92,255,${0.35 + pulse * 0.4})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(gx, height * 0.1);
@@ -174,7 +175,7 @@ export function DecisionStream({
         // Ease into the assigned lane after the gate.
         if (d.scored) d.y += (d.targetY - d.y) * 0.09;
 
-        const colour = d.scored ? LANE_COLORS[d.lane] : "#6d7cff";
+        const colour = d.scored ? LANE_COLORS[d.lane] : "#7c5cff";
         ctx.beginPath();
         ctx.arc(d.x, d.y, 3, 0, Math.PI * 2);
         ctx.fillStyle = colour;

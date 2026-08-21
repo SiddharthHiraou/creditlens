@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import {
   Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
@@ -168,6 +169,8 @@ export default function CopilotPage() {
           </Note>
         </div>
       </Card>
+    
+      <NextStep current="/copilot" />
     </Stagger>
   );
 }

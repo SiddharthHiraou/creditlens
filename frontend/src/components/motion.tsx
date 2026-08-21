@@ -17,60 +17,29 @@ function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Fade-and-rise a block the first time it scrolls into view.
+ * Fade-and-rise a block on page load.
  *
- * Deliberately one-shot: re-animating on every scroll past is the thing that
- * makes motion feel cheap. `delay` staggers siblings.
+ * Deliberately **CSS-only**. The previous version hid the element at
+ * `opacity: 0` and waited for an IntersectionObserver, with a `setTimeout`
+ * failsafe. Both are throttled in a background tab, so a page opened in one
+ * rendered completely blank — the nav and nothing else — and stayed that way.
+ * The failsafe shared the exact weakness of the thing it was meant to protect.
+ *
+ * Now the animation is pure decoration: the keyframe runs on its own, browsers
+ * resume it on focus, and if the animation never runs at all the content is
+ * simply visible. There is no code path where a scripting failure hides the
+ * page. The tradeoff is that entrances play on load rather than on scroll,
+ * which on pages this length is barely distinguishable and worth the safety.
  */
 export function Reveal({
   children, delay = 0, className,
 }: {
   children: ReactNode; delay?: number; className?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  const reduced = usePrefersReducedMotion();
-
-  useEffect(() => {
-    if (reduced) return setShown(true);
-    const el = ref.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShown(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
-    );
-    io.observe(el);
-
-    // Fail open. The pre-reveal state is opacity 0, so anything that stops the
-    // observer from firing — a background tab suppressing callbacks, an old
-    // browser, a script error elsewhere on the page — would leave the content
-    // permanently invisible. A blank page is a far worse outcome than a missed
-    // animation, so reveal unconditionally after a short grace period.
-    const failsafe = window.setTimeout(() => {
-      setShown(true);
-      io.disconnect();
-    }, 1200);
-
-    return () => {
-      window.clearTimeout(failsafe);
-      io.disconnect();
-    };
-  }, [reduced]);
-
   return (
     <div
-      ref={ref}
-      className={clsx(className, shown && !reduced && "reveal")}
-      style={{
-        animationDelay: shown && !reduced ? `${delay}ms` : undefined,
-        opacity: shown || reduced ? undefined : 0,
-      }}
+      className={clsx("reveal", className)}
+      style={delay ? { animationDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>

@@ -22,13 +22,17 @@ export const AXIS = {
  */
 export const NO_ANIM = { isAnimationActive: false } as const;
 
+// Kept in sync by hand with the CSS custom properties in globals.css. Recharts
+// renders to SVG attributes and cannot read var(--color-*), so these are the one
+// place hex values are duplicated — change both together.
 export const PALETTE = {
-  accent: "#4f7cf7",
-  approve: "#2f9e6f",
-  refer: "#c98a1f",
-  decline: "#cf4b4b",
-  muted: "#8f99ab",
-  violet: "#8b5cf6",
+  accent: "#7c5cff",
+  accent2: "#35e0f2",
+  approve: "#2ee6a8",
+  refer: "#ffb44d",
+  decline: "#ff5d6c",
+  muted: "#8d95ab",
+  violet: "#a78bfa",
 } as const;
 
 /** Recharts needs a sized parent; this keeps every chart on one height scale. */

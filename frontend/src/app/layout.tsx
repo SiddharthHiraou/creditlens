@@ -30,11 +30,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen font-[family-name:var(--font-sans)] antialiased">
         <Providers>
           <Nav />
-          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-          <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-[var(--text-muted)] sm:px-6">
-            <p>
-              Demo data generated from the project&apos;s own model artifacts. Not a
-              real lender; no real applicants.
+          <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">{children}</main>
+          <footer className="mx-auto max-w-6xl px-5 pb-14 sm:px-8">
+            <div className="rule mb-5" />
+            <p className="text-xs leading-relaxed text-[var(--text-muted)]">
+              A portfolio project by Siddharth Hiraou. Every figure is generated from the
+              model artifacts in the repository and reproducible with{" "}
+              <code className="font-mono text-[11px]">make train</code>. Trained on
+              synthetic data — not a real lender, and no real applicants.
             </p>
           </footer>
         </Providers>

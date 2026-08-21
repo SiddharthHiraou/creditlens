@@ -1,261 +1,157 @@
 import Link from "next/link";
 
 import { DecisionStream } from "@/components/decision-stream";
-import { Reveal, Stagger } from "@/components/motion";
-import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
-import {
-  getExplainability, getFairness, getPortfolio, getSimulator, getSummary,
-} from "@/lib/data";
+import { JourneyMap, NextStep } from "@/components/journey";
+import { Stagger } from "@/components/motion";
+import { Badge, Card, Cell, Note, PageHeader, Row, Table } from "@/components/ui";
+import { getFairness, getPortfolio, getSimulator, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
 export default function Home() {
   const summary = getSummary();
   const fairness = getFairness();
-  const explain = getExplainability();
   const portfolio = getPortfolio();
   const simulator = getSimulator();
-  const { headline, baseline } = summary;
-  const age = fairness.groups.ageBand;
+  const { headline } = summary;
 
-  const approved = portfolio.bands.find((b) => b.decision === "approve");
-  const declined = portfolio.bands.find((b) => b.decision === "decline");
+  const approved = portfolio.bands.find((b) => b.decision === "approve")!;
+  const declined = portfolio.bands.find((b) => b.decision === "decline")!;
+  const separation = declined.badRate / approved.badRate;
 
   return (
-    <Stagger className="space-y-10">
+    <Stagger className="space-y-12">
       <PageHeader
         eyebrow="Credit decisioning and model risk"
         title="Lending decisions a bank could defend"
-        lede="Built for lenders writing unsecured consumer loans at volume — a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale. That last part is what separates a model that works from one a bank is allowed to use."
+        lede="Built for lenders writing unsecured consumer loans at volume — a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale."
       />
 
-      <Reveal>
-        <DecisionStream
-          data={simulator}
-          approveAt={summary.policy.approveAt}
-          referAt={summary.policy.referAt}
-        />
-      </Reveal>
+      <DecisionStream
+        data={simulator}
+        approveAt={summary.policy.approveAt}
+        referAt={summary.policy.referAt}
+      />
+
+      {/* The whole case for the product, in three figures. */}
+      <section className="grid gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3">
+        <div className="bg-[var(--surface-raised)] p-6">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+            Loans it approves
+          </p>
+          <p className="stat-xl mt-2 text-[var(--color-approve)]">
+            {pct(approved.badRate, 1)}
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">go on to default</p>
+        </div>
+        <div className="bg-[var(--surface-raised)] p-6">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+            Loans it turns away
+          </p>
+          <p className="stat-xl mt-2 text-[var(--color-decline)]">
+            {pct(declined.badRate, 1)}
+          </p>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">would have defaulted</p>
+        </div>
+        <div className="bg-[var(--surface-raised)] p-6">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+            Separation
+          </p>
+          <p className="stat-xl gradient-text mt-2">{separation.toFixed(1)}×</p>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            the gap that makes it worth running
+          </p>
+        </div>
+      </section>
+
+      <Note>
+        Measured on {headline.n.toLocaleString()} loans the model had never seen, issued
+        later than the ones it learned from. Without any model, {pct(headline.badRate, 1)} of
+        applicants default — so approving the best 60% cuts that to {pct(approved.badRate, 1)}.
+      </Note>
+
+      <JourneyMap />
 
       <Card
         title="The trade every lender makes"
-        subtitle={`Measured on this book of ${headline.n.toLocaleString()} loans with known outcomes — not projected.`}
+        subtitle="Approve more and you earn more — and lose more. There is no setting that avoids it."
       >
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-          <div>
-            <Table head={["If you approve…", "…this share of approved loans goes bad"]}>
-              {fairness.cutoffCurve.map((c) => (
-                <Row key={c.approvalRate}>
-                  <Cell align="left" mono={false}>
-                    {c.approvalRate === 0.6 ? (
-                      <span className="font-medium">
-                        {pct(c.approvalRate, 0)} <Badge tone="accent">current policy</Badge>
-                      </span>
-                    ) : (
-                      pct(c.approvalRate, 0)
-                    )}
-                  </Cell>
-                  <Cell
-                    className={
-                      c.badRateAmongApproved > 0.1 ? "text-[var(--color-decline)]" : undefined
-                    }
-                  >
-                    {pct(c.badRateAmongApproved, 1)}
-                  </Cell>
-                </Row>
-              ))}
-              <Row>
-                <Cell align="left" mono={false}>everyone (no model)</Cell>
-                <Cell className="text-[var(--color-decline)]">{pct(headline.badRate, 1)}</Cell>
+          <Table head={["If you approve…", "…this share goes bad"]}>
+            {fairness.cutoffCurve.map((c) => (
+              <Row key={c.approvalRate}>
+                <Cell align="left" mono={false}>
+                  {c.approvalRate === 0.6 ? (
+                    <span className="font-medium">
+                      {pct(c.approvalRate, 0)} <Badge tone="accent">current policy</Badge>
+                    </span>
+                  ) : (
+                    pct(c.approvalRate, 0)
+                  )}
+                </Cell>
+                <Cell
+                  className={
+                    c.badRateAmongApproved > 0.1 ? "text-[var(--color-decline)]" : undefined
+                  }
+                >
+                  {pct(c.badRateAmongApproved, 1)}
+                </Cell>
               </Row>
-            </Table>
-          </div>
+            ))}
+            <Row>
+              <Cell align="left" mono={false}>everyone (no model)</Cell>
+              <Cell className="text-[var(--color-decline)]">{pct(headline.badRate, 1)}</Cell>
+            </Row>
+          </Table>
 
           <div className="space-y-4">
             <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-              Approve too many and defaults eat the margin. Approve too few and you turn
-              away good customers. There is no setting that avoids the trade — the job is
-              to separate the two groups well enough that the next approval is still worth
-              taking.
+              Every extra approval is more revenue <em>and</em> more loss. The job is to
+              separate the two groups well enough that the next approval is still worth
+              taking — and then to prove that separation is real, fair, and still true
+              next quarter.
             </p>
-            {approved && declined && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Metric
-                  label="Loans it approves"
-                  value={pct(approved.badRate, 1)}
-                  hint="default rate"
-                  tone="good"
-                />
-                <Metric
-                  label="Loans it turns away"
-                  value={pct(declined.badRate, 1)}
-                  hint="default rate"
-                  tone="bad"
-                />
-              </div>
-            )}
-            <Note>
-              A {(declined && approved ? declined.badRate / approved.badRate : 0).toFixed(1)}×
-              gap between the two groups. That separation is the entire product — everything
-              else on this site exists to prove it is real, fair, and still true next quarter.
-            </Note>
+            <Link
+              href="/portfolio"
+              className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/10 px-3.5 py-2 text-sm font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/20"
+            >
+              Try moving the cutoff yourself
+              <span aria-hidden>→</span>
+            </Link>
           </div>
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric
-          label="Gini (out-of-time)"
-          value={num(headline.gini, 4)}
-          compare={`baseline ${num(baseline.gini, 4)}`}
-          accent
-        />
-        <Metric
-          label="KS"
-          value={num(headline.ks, 4)}
-          compare={`baseline ${num(baseline.ks, 4)}`}
-          tone="good"
-        />
-        <Metric
-          label="Brier (calibrated)"
-          value={num(headline.brier, 4)}
-          compare={`uncalibrated ${num(summary.calibration.brier_raw, 4)}`}
-          tone="good"
-        />
-        <Metric
-          label="Score PSI"
-          value={num(headline.psi, 4)}
-          hint="Stable: below the 0.10 investigate threshold."
-          tone="good"
-        />
-      </div>
-
-      <Card
-        title="What a lending team would use this for"
-        subtitle={`Model: ${summary.champion}. ${summary.nFeaturesBuilt} signals built per applicant, ${summary.nFeaturesSelected} kept, ${summary.nMonotonicConstraints} direction-locked so more debt can never look safer.`}
-      >
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Feature
-            href="/score"
-            title="Decline someone lawfully"
-            body="Four specific reasons in plain English, ranked, never naming a protected characteristic. The law requires this; most models cannot do it."
-          />
-          <Feature
-            href="/portfolio"
-            title="Set the approval rate"
-            body="Drag the cutoff and watch defaults, losses and profit move. Real outcomes, so it shows what would actually have happened."
-          />
-          <Feature
-            href="/monitoring"
-            title="Know when it goes stale"
-            body="Applicants change. A daily check catches the drift, and a gate blocks any replacement model that isn't demonstrably safer."
-          />
-          <Feature
-            href="/fairness"
-            title="Prove it isn't discriminating"
-            body={`Approval rates by protected group. This model fails the standard test on age at ${num(age.disparate_impact, 3)} — reported, not hidden.`}
-          />
-        </div>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card
-          title="Four model tracks, compared honestly"
-          subtitle="Champion chosen on validation. The stack is a ceiling reference, not a serving candidate."
-        >
-          <Table head={["Track", "Valid AUC", "OOT AUC", "OOT Gini"]}>
-            {summary.tracks.map((t) => (
-              <Row key={t.name}>
-                <Cell align="left" mono={false}>
-                  <span className="flex items-center gap-2">
-                    {t.name}
-                    {t.isChampion && <Badge tone="accent">champion</Badge>}
-                  </span>
-                </Cell>
-                <Cell>{num(t.validAuc)}</Cell>
-                <Cell>{num(t.ootAuc)}</Cell>
-                <Cell>{num(t.ootGini)}</Cell>
-              </Row>
-            ))}
-          </Table>
-          <div className="mt-4">
-            <Note>
-              The WOE scorecard lands within{" "}
-              {num(
-                (summary.tracks.find((t) => t.isChampion)?.ootAuc ?? 0) -
-                  (summary.tracks.find((t) => t.name === "scorecard")?.ootAuc ?? 0),
-                4,
-              )}{" "}
-              AUC of the tuned GBDT champion — roughly 99% of the discrimination for a
-              fraction of the explainability cost. The GBDT wins, but not by enough to
-              make the scorecard track ceremonial.
-            </Note>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Ranking quality", value: num(headline.gini, 3), sub: "Gini — 0 is a coin flip, 1 is perfect" },
+          { label: "Probabilities honest?", value: num(headline.brier, 3), sub: "Brier — says 7%, about 7 in 100 default" },
+          { label: "Decision speed", value: "46 ms", sub: "including the explanation" },
+          { label: "Still current?", value: num(headline.psi, 3), sub: "drift — under 0.10 is stable" },
+        ].map((m) => (
+          <div
+            key={m.label}
+            className="card-hover rounded-xl border border-[var(--border)] bg-[var(--surface-raised)] p-5"
+          >
+            <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+              {m.label}
+            </p>
+            <p className="mt-2 text-3xl font-semibold tabular-nums">{m.value}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-muted)]">{m.sub}</p>
           </div>
-        </Card>
+        ))}
+      </section>
 
-        <Card
-          title="Calibration is the difference between a ranking and a probability"
-          subtitle="Class reweighting fixes discrimination and wrecks the probability scale."
-        >
-          <Table head={["", "Raw", "Calibrated"]}>
-            <Row>
-              <Cell align="left" mono={false}>Brier</Cell>
-              <Cell>{num(summary.calibration.brier_raw, 5)}</Cell>
-              <Cell className="text-[var(--color-approve)]">
-                {num(summary.calibration.brier_calibrated, 5)}
-              </Cell>
-            </Row>
-            <Row>
-              <Cell align="left" mono={false}>Expected calibration error</Cell>
-              <Cell>{num(summary.calibration.ece_raw, 5)}</Cell>
-              <Cell className="text-[var(--color-approve)]">
-                {num(summary.calibration.ece_calibrated, 5)}
-              </Cell>
-            </Row>
-            <Row>
-              <Cell align="left" mono={false}>Mean predicted PD</Cell>
-              <Cell>{pct(summary.calibration.mean_pd_raw, 2)}</Cell>
-              <Cell className="text-[var(--color-approve)]">
-                {pct(summary.calibration.mean_pd_calibrated, 2)}
-              </Cell>
-            </Row>
-            <Row>
-              <Cell align="left" mono={false}>Actual bad rate</Cell>
-              <Cell>—</Cell>
-              <Cell>{pct(summary.calibration.actual_bad_rate, 2)}</Cell>
-            </Row>
-          </Table>
-          <div className="mt-4">
-            <Note>
-              Reweighting pushed mean predicted PD to{" "}
-              {pct(summary.calibration.mean_pd_raw, 0)} against a true rate of{" "}
-              {pct(summary.calibration.actual_bad_rate, 0)}. Expected-loss arithmetic on
-              the raw score would have been wrong by a factor of 2.5 while every
-              discrimination metric looked healthy.
-            </Note>
-          </div>
-        </Card>
-      </div>
+      <Note tone="warn">
+        Trained on synthetic data, because neither public dataset can be downloaded
+        without a manual step. The pipeline reads the real files the moment they exist —
+        but no figure here describes a real borrower. The{" "}
+        <Link href="/model-card" className="text-[var(--color-accent)] underline-offset-2 hover:underline">
+          model card
+        </Link>{" "}
+        lists every limitation, including the fair-lending test this model fails.
+      </Note>
 
-      <Card title="Serving" subtitle="Measured with Locust against a live server, not a test client.">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Metric label="ONNX p99, batch size 1" value={`${summary.latency.onnxP99Ms} ms`} compare={`native ${summary.latency.nativeP99Ms} ms`} />
-          <Metric label="API p99" value={`${summary.latency.apiP99Ms} ms`} compare={`${summary.latency.apiUsers} concurrent users, 4 workers`} />
-          <Metric label="SHAP additivity error" value={explain.additivityError.toExponential(1)} hint="Reconstructs the raw margin exactly." />
-          <Metric label="Declines with 4 distinct reasons" value={pct(explain.reasonCodes.share_with_four_reasons, 0)} tone="good" />
-        </div>
-      </Card>
+      <NextStep current="/" />
     </Stagger>
-  );
-}
-
-function Feature({ href, title, body }: { href: string; title: string; body: string }) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 transition-colors hover:border-[var(--color-accent)]/50"
-    >
-      <p className="text-sm font-medium group-hover:text-[var(--color-accent)]">{title}</p>
-      <p className="mt-1.5 text-xs leading-relaxed text-[var(--text-muted)]">{body}</p>
-    </Link>
   );
 }

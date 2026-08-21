@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import { CutoffSimulator } from "@/components/cutoff-simulator";
 import {
@@ -109,6 +110,8 @@ export default function PortfolioPage() {
           </Table>
         </div>
       </Card>
+    
+      <NextStep current="/portfolio" />
     </Stagger>
   );
 }

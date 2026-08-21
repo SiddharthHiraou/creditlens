@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import {
   CsiChart, PsiBinsChart, VintagePsiChart,
@@ -111,6 +112,8 @@ export default function MonitoringPage() {
         available from <code>GET /v1/monitoring/drift</code> when the API is running.
         Score PSI for this model is {num(summary.headline.psi, 4)} — stable.
       </Note>
+    
+      <NextStep current="/monitoring" />
     </Stagger>
   );
 }

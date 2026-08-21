@@ -22,44 +22,58 @@
 
   /* Signature palette. Decision colours are the identity: this is a product
      that sorts people into three buckets, so those three colours carry it. */
-  --color-approve: #21c197;
-  --color-refer: #f0a53a;
-  --color-decline: #f2545b;
-  --color-accent: #6d7cff;
-  --color-accent-2: #22d3ee;
+  --color-approve: #2ee6a8;
+  --color-refer: #ffb44d;
+  --color-decline: #ff5d6c;
+  --color-accent: #7c5cff;
+  --color-accent-2: #35e0f2;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
-  --surface: #fbfbfd;
+
+  /* The vivid decision colours are tuned for a near-black canvas. On white the
+     same greens and ambers drop under a readable contrast ratio, so light mode
+     gets darker, more saturated variants of the same hues. */
+  --color-approve: #0f9d76;
+  --color-refer: #b7791f;
+  --color-decline: #d4323f;
+  --color-accent: #5b3ff0;
+  --color-accent-2: #0891b2;
+
+  --surface: #f7f7fb;
   --surface-raised: #ffffff;
-  --border: #e4e7ee;
-  --border-strong: #d3d8e3;
-  --text: #10131a;
-  --text-muted: #5a6577;
-  --grid: #e8eaee;
-  --glow: 0 0 0 rgba(0, 0, 0, 0);
-  --card-shadow: 0 1px 2px rgba(16, 19, 26, 0.04), 0 8px 24px -12px rgba(16, 19, 26, 0.12);
-  --mesh-1: rgba(109, 124, 255, 0.10);
-  --mesh-2: rgba(34, 211, 238, 0.08);
-  --noise-opacity: 0.025;
+  --surface-sunk: #eef0f6;
+  --border: #e3e6ef;
+  --border-strong: #cdd3e2;
+  --text: #0b0d13;
+  --text-muted: #59617a;
+  --grid: #e8eaf1;
+  --card-shadow: 0 1px 2px rgba(11, 13, 19, 0.04), 0 12px 32px -16px rgba(11, 13, 19, 0.16);
+  --mesh-1: rgba(124, 92, 255, 0.13);
+  --mesh-2: rgba(53, 224, 242, 0.10);
+  --noise-opacity: 0.02;
 }
 
 .dark {
   color-scheme: dark;
-  --surface: #080a10;
-  --surface-raised: #10131b;
-  --border: #222836;
-  --border-strong: #2f3747;
-  --text: #eef0f5;
-  --text-muted: #909aad;
-  --grid: #1c2230;
-  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -20px rgba(0, 0, 0, 0.9);
-  --mesh-1: rgba(109, 124, 255, 0.16);
-  --mesh-2: rgba(34, 211, 238, 0.10);
-  --noise-opacity: 0.04;
+  /* Near-black rather than navy. The old blue-grey made every surface look
+     slightly washed; pure-dark lets the accent and the decision colours carry
+     all the saturation on the page. */
+  --surface: #06070a;
+  --surface-raised: #0e1016;
+  --surface-sunk: #0a0b10;
+  --border: #1e2130;
+  --border-strong: #333849;
+  --text: #ffffff;
+  --text-muted: #8d95ab;
+  --grid: #191d29;
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 48px -28px rgba(0, 0, 0, 1);
+  --mesh-1: rgba(124, 92, 255, 0.22);
+  --mesh-2: rgba(53, 224, 242, 0.12);
+  --noise-opacity: 0.035;
 }
 
 /* The background goes on <html> as well as <body>. Painting only the body
@@ -106,10 +120,12 @@ body > * {
   z-index: 1;
 }
 
-h1, h2, .font-display {
+h1, h2, h3, .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.022em;
+  letter-spacing: -0.028em;
 }
+
+h1 { text-wrap: balance; }
 
 /* Big figures should read as data, not prose: even widths, tight tracking. */
 .tabular-nums {
@@ -155,8 +171,12 @@ h1, h2, .font-display {
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 
+/* `backwards` applies the from-state during the delay only. Never `forwards`
+   or `both` with an indefinite trigger — the end state must be the natural,
+   fully visible one, so a cancelled or unsupported animation leaves content
+   readable rather than hidden. */
 .reveal {
-  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* Gradient text for the one number per page that matters most. */
@@ -215,4 +235,47 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .reveal { animation: none !important; }
   .card-hover:hover { transform: none; }
+}
+
+
+/* ---- theme accents ----------------------------------------------------- */
+
+/* A hairline of accent light along the top of a feature surface. Cheap way to
+   make a flat card read as lit rather than pasted on. */
+.edge-lit {
+  position: relative;
+}
+.edge-lit::before {
+  content: "";
+  position: absolute;
+  inset-inline: 12%;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  opacity: 0.55;
+}
+
+.accent-ring {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-accent) 30%, transparent),
+    0 0 42px -14px color-mix(in oklab, var(--color-accent) 70%, transparent);
+}
+
+/* Numbers big enough to read across a room — used for the three figures that
+   carry the whole story. */
+.stat-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 6vw, 4.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+/* Nav pill that slides rather than snapping between items. */
+.nav-pill {
+  transition: color 0.15s ease, background-color 0.15s ease;
 }

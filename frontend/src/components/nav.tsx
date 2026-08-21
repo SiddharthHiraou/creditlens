@@ -27,13 +27,13 @@ export function Nav() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--surface)]/85 backdrop-blur">
+    <nav className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--surface)]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center rounded bg-[var(--color-accent)] text-[11px] font-bold text-white">
+          <span className="accent-ring grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-2)] text-[11px] font-bold text-white">
             CL
           </span>
-          <span className="text-sm font-semibold tracking-tight">CreditLens</span>
+          <span className="font-display text-[15px] font-semibold tracking-tight">CreditLens</span>
         </Link>
 
         <div className="hidden flex-1 items-center gap-1 md:flex">
@@ -42,10 +42,10 @@ export function Nav() {
               key={link.href}
               href={link.href}
               className={clsx(
-                "rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                "nav-pill rounded-lg px-3 py-1.5 text-[13px]",
                 active(link.href)
-                  ? "bg-[var(--surface-raised)] font-medium text-[var(--text)]"
-                  : "text-[var(--text-muted)] hover:text-[var(--text)]",
+                  ? "bg-[var(--color-accent)]/12 font-medium text-[var(--color-accent)]"
+                  : "text-[var(--text-muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]",
               )}
             >
               {link.label}

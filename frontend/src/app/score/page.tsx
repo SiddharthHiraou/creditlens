@@ -1,3 +1,4 @@
+import { NextStep } from "@/components/journey";
 import { Stagger } from "@/components/motion";
 import { ScoreWorkbench } from "@/components/score-workbench";
 import { Card, Metric, Note, PageHeader, WhyItMatters } from "@/components/ui";
@@ -52,6 +53,8 @@ export default function ScorePage() {
           build if that stops being true.
         </Note>
       </Card>
+    
+      <NextStep current="/score" />
     </Stagger>
   );
 }
