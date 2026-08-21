@@ -1,7 +1,9 @@
 # One `docker compose up` brings the whole system alive.
 #
 #   docker compose -f infra/docker-compose.yml up --build
-#   curl -s localhost:8000/health
+#   curl -s localhost:8000/health     # API
+#   open http://localhost:3000        # dashboard
+#   open http://localhost:5001        # MLflow
 #
 # Requires the champion to have been trained first (`make train`), because the
 # API image bakes in the ONNX model and the feature spec.
@@ -60,6 +62,16 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
         condition: service_healthy
 
   mlflow:

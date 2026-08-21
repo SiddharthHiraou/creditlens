@@ -113,8 +113,34 @@ class AuditStore:
         else:
             kwargs["pool_pre_ping"] = True
         engine = create_engine(url, **kwargs)
+        # create_all() creates *missing tables*; it never alters an existing
+        # one. Adding a column to a table that already exists is silently a
+        # no-op, and the first query referencing it fails at runtime. There is
+        # no migration tool in this project — Alembic is the right answer and is
+        # named in the README's known gaps rather than half-built — so the
+        # missing-column case is detected and reported instead of surfacing as
+        # an opaque ProgrammingError on the first request.
         metadata.create_all(engine)
+        cls._assert_schema_current(engine)
         return cls(engine=engine)
+
+    @staticmethod
+    def _assert_schema_current(engine: Engine) -> None:
+        from sqlalchemy import inspect
+
+        inspector = inspect(engine)
+        for table in metadata.sorted_tables:
+            if not inspector.has_table(table.name):
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table.name)}
+            missing = {c.name for c in table.columns} - existing
+            if missing:
+                raise RuntimeError(
+                    f"Table {table.name!r} is missing column(s) {sorted(missing)}. "
+                    "The schema predates this build and create_all() does not alter "
+                    "existing tables. Run a migration, or for a disposable "
+                    "environment: docker compose down -v && docker compose up."
+                )
 
     def healthy(self) -> bool:
         try:

@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast audit explain memo copilot drift retrain promote demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain memo copilot drift retrain promote docs demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -45,6 +45,10 @@ retrain:  ## Train and stage a candidate model
 
 promote:  ## Gate the staged candidate; promotes only on a clean sweep
 	$(PY) -m src.cli flows promote
+
+docs:  ## Regenerate model card, validation report and data dictionary from artifacts
+	$(PY) -m src.governance
+	$(PY) -m src.features.dictionary
 
 demo-data:  ## Export the static JSON snapshots the frontend renders from
 	$(PY) -m src.api.export_demo

@@ -47,3 +47,9 @@ out/
 .ipynb_checkpoints/
 .idea/
 .vscode/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl

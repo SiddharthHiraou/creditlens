@@ -43,6 +43,22 @@ jobs:
           .venv/bin/python -m src.api.export_demo
           .venv/bin/python -m src.cli flows ingest
           .venv/bin/python -m src.cli flows drift
+          .venv/bin/python -m src.governance
+          .venv/bin/python -m src.features.dictionary
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Format check
+        run: terraform fmt -check -recursive
+        working-directory: infra/terraform
+      - name: Validate
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+        working-directory: infra/terraform
 
   frontend:
     runs-on: ubuntu-latest
