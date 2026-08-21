@@ -8,7 +8,7 @@ import type { SimulatorData } from "@/lib/types";
 /**
  * A live view of applications being decided.
  *
- * Every dot is a **real loan from the out-of-time test set** — its lane comes
+ * Every dot is a **real loan from the out-of-time test set**. Its lane comes
  * from the model's actual score against the current cutoff, and the ring marks
  * loans that genuinely went on to default. So the visual is not decoration: the
  * red rings landing in the approve lane are the mistakes the model really makes,
@@ -89,7 +89,7 @@ export function DecisionStream({
 
     // The exported sample is sorted ascending by score so the cutoff simulator
     // can slice it cheaply. Walking it in order here would replay a contiguous
-    // band — the stream showed an empty approve lane and a solid wall of
+    // band, and the stream showed an empty approve lane and a solid wall of
     // declines. Shuffle once so the flow is representative of the whole book.
     const order = Array.from({ length: data.score.length }, (_, i) => i);
     for (let i = order.length - 1; i > 0; i--) {
@@ -106,7 +106,7 @@ export function DecisionStream({
 
     // Speed is derived from the canvas width so a dot always crosses in about
     // three seconds. A fixed pixels-per-frame looks fine on a phone and leaves
-    // a 1700px desktop canvas looking frozen — twenty seconds per crossing.
+    // a 1700px desktop canvas looking frozen, at twenty seconds per crossing.
     const baseSpeed = () => Math.max(width / (3 * 60), 2.2);
 
     const spawn = (atX?: number) => {

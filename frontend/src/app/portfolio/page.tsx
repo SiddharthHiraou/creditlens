@@ -8,7 +8,7 @@ import { Badge, Card, Cell, Note, PageHeader, Row, Table, WhyItMatters } from "@
 import { getPortfolio, getSimulator, getSummary } from "@/lib/data";
 import { compactMoney, count, num, pct } from "@/lib/format";
 
-export const metadata = { title: "Portfolio — CreditLens" };
+export const metadata = { title: "Portfolio: CreditLens" };
 
 export default function PortfolioPage() {
   const portfolio = getPortfolio();
@@ -31,7 +31,7 @@ export default function PortfolioPage() {
         starve the book; approve too many and defaults eat the margin. Committees
         argue this quarterly, usually with a spreadsheet and a guess. Every figure
         below comes from <strong>loans whose outcomes are already known</strong>, so
-        it shows what would actually have happened at each setting — not what the
+        it shows what would actually have happened at each setting, not what the
         model predicts would have.
       </WhyItMatters>
 
@@ -40,7 +40,7 @@ export default function PortfolioPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card
           title="How the book splits"
-          subtitle={`Every applicant placed on the 300–850 scale. Green is approved, amber referred to a human, red declined — at the current cutoff of ${summary.policy.approveAt}.`}
+          subtitle={`Every applicant placed on the 300 to 850 scale. Green is approved, amber referred to a human, red declined, at the current cutoff of ${summary.policy.approveAt}.`}
         >
           <ScoreDistribution
             data={portfolio.scoreDistribution}
@@ -51,7 +51,7 @@ export default function PortfolioPage() {
 
         <Card
           title="Does the ranking hold?"
-          subtitle="Applicants split into ten risk bands. Band 1 is who the model thinks is riskiest — and they should default most."
+          subtitle="Applicants split into ten risk bands. Band 1 is who the model thinks is riskiest, and they should default most."
           action={
             <Badge tone={monotone ? "good" : "bad"}>
               {monotone ? "ranking holds" : "ranking breaks"}
@@ -84,7 +84,7 @@ export default function PortfolioPage() {
         </Table>
         <div className="mt-4">
           <Note>
-            Mean PD tracks observed bad rate closely in every band — that is the
+            Mean PD tracks observed bad rate closely in every band, which is the
             calibration working. On the uncalibrated model these two columns differed
             by a factor of 2.5.
           </Note>

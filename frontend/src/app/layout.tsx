@@ -7,7 +7,7 @@ import { Providers } from "@/components/providers";
 
 import "./globals.css";
 
-// Sora for headings — geometric, a little editorial, distinct from the
+// Sora for headings: geometric, a little editorial, distinct from the
 // system-font look every dashboard defaults to. Inter for body, Plex Mono for
 // figures and feature names.
 const display = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-display" });
@@ -15,7 +15,7 @@ const sans = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "CreditLens — automated lending decisions a bank could defend",
+  title: "CreditLens: automated lending decisions a bank could defend",
   description:
     "Decides consumer loan applications, explains every decline in plain English, proves it is not discriminating, and flags when it has gone stale.",
 };
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               A portfolio project by Siddharth Hiraou. Every figure is generated from the
               model artifacts in the repository and reproducible with{" "}
               <code className="font-mono text-[11px]">make train</code>. Trained on
-              synthetic data — not a real lender, and no real applicants.
+              synthetic data, not a real lender, and no real applicants.
             </p>
           </footer>
         </Providers>

@@ -14,8 +14,8 @@ export const AXIS = {
  *
  * Recharts drives its entry animation with requestAnimationFrame, which does
  * not advance while a tab is in the background. A chart mounted in a hidden
- * tab therefore stays at frame zero — axes and gridlines render, the data
- * never appears — and it stays that way after the tab is foregrounded. Anyone
+ * tab therefore stays at frame zero: axes and gridlines render, the data
+ * never appears, and it stays that way after the tab is foregrounded. Anyone
  * who opens the dashboard in a background tab sees empty charts.
  *
  * Static dashboards gain nothing from the animation anyway.
@@ -24,7 +24,7 @@ export const NO_ANIM = { isAnimationActive: false } as const;
 
 // Kept in sync by hand with the CSS custom properties in globals.css. Recharts
 // renders to SVG attributes and cannot read var(--color-*), so these are the one
-// place hex values are duplicated — change both together.
+// place hex values are duplicated, so change both together.
 export const PALETTE = {
   accent: "#7c5cff",
   accent2: "#35e0f2",

@@ -23,7 +23,7 @@ export default function Home() {
       <PageHeader
         eyebrow="Credit decisioning and model risk"
         title="Lending decisions a bank could defend"
-        lede="Built for lenders writing unsecured consumer loans at volume — a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale."
+        lede="Built for lenders writing unsecured consumer loans at volume: a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale."
       />
 
       <DecisionStream
@@ -66,14 +66,14 @@ export default function Home() {
       <Note>
         Measured on {headline.n.toLocaleString()} loans the model had never seen, issued
         later than the ones it learned from. Without any model, {pct(headline.badRate, 1)} of
-        applicants default — so approving the best 60% cuts that to {pct(approved.badRate, 1)}.
+        applicants default, so approving the best 60% cuts that to {pct(approved.badRate, 1)}.
       </Note>
 
       <JourneyMap />
 
       <Card
         title="The trade every lender makes"
-        subtitle="Approve more and you earn more — and lose more. There is no setting that avoids it."
+        subtitle="Approve more and you earn more, and lose more. There is no setting that avoids it."
       >
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
           <Table head={["If you approve…", "…this share goes bad"]}>
@@ -107,7 +107,7 @@ export default function Home() {
             <p className="text-sm leading-relaxed text-[var(--text-muted)]">
               Every extra approval is more revenue <em>and</em> more loss. The job is to
               separate the two groups well enough that the next approval is still worth
-              taking — and then to prove that separation is real, fair, and still true
+              taking, and then to prove that separation is real, fair, and still true
               next quarter.
             </p>
             <Link
@@ -123,10 +123,10 @@ export default function Home() {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Ranking quality", value: num(headline.gini, 3), sub: "Gini — 0 is a coin flip, 1 is perfect" },
-          { label: "Probabilities honest?", value: num(headline.brier, 3), sub: "Brier — says 7%, about 7 in 100 default" },
+          { label: "Ranking quality", value: num(headline.gini, 3), sub: "Gini: 0 is a coin flip, 1 is perfect" },
+          { label: "Probabilities honest?", value: num(headline.brier, 3), sub: "Brier: says 7%, about 7 in 100 default" },
           { label: "Decision speed", value: "46 ms", sub: "including the explanation" },
-          { label: "Still current?", value: num(headline.psi, 3), sub: "drift — under 0.10 is stable" },
+          { label: "Still current?", value: num(headline.psi, 3), sub: "drift: under 0.10 is stable" },
         ].map((m) => (
           <div
             key={m.label}
@@ -143,7 +143,7 @@ export default function Home() {
 
       <Note tone="warn">
         Trained on synthetic data, because neither public dataset can be downloaded
-        without a manual step. The pipeline reads the real files the moment they exist —
+        without a manual step. The pipeline reads the real files the moment they exist,
         but no figure here describes a real borrower. The{" "}
         <Link href="/model-card" className="text-[var(--color-accent)] underline-offset-2 hover:underline">
           model card

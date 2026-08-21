@@ -22,7 +22,7 @@ function usePrefersReducedMotion(): boolean {
  * Deliberately **CSS-only**. The previous version hid the element at
  * `opacity: 0` and waited for an IntersectionObserver, with a `setTimeout`
  * failsafe. Both are throttled in a background tab, so a page opened in one
- * rendered completely blank — the nav and nothing else — and stayed that way.
+ * rendered completely blank (the nav and nothing else) and stayed that way.
  * The failsafe shared the exact weakness of the thing it was meant to protect.
  *
  * Now the animation is pure decoration: the keyframe runs on its own, browsers
@@ -50,7 +50,7 @@ export function Reveal({
  * Count a number up when it first becomes visible, and re-run smoothly
  * whenever the value changes afterwards.
  *
- * Eased rather than linear, and short — a slow counter on a dashboard reads as
+ * Eased rather than linear, and short, because a slow counter on a dashboard reads as
  * a loading bug. Reduced motion skips straight to the value.
  */
 export function useCountUp(target: number, { duration = 900 }: { duration?: number } = {}) {
@@ -122,7 +122,7 @@ export function CountUp({
  * Reveal each direct child in sequence as the page scrolls.
  *
  * Applied at page level so individual pages don't have to wrap every section
- * by hand. The stagger is capped — past about half a second the delay stops
+ * by hand. The stagger is capped, because past about half a second the delay stops
  * reading as choreography and starts reading as slowness.
  */
 export function Stagger({

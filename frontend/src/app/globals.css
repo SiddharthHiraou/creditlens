@@ -78,7 +78,7 @@
 
 /* The background goes on <html> as well as <body>. Painting only the body
    leaves the canvas transparent above and below it, which shows as a flash of
-   the wrong colour during overscroll and before first paint — most visible in
+   the wrong colour during overscroll and before first paint, most visible in
    dark mode, where the fallback is white. */
 html {
   background: var(--surface);
@@ -172,7 +172,7 @@ h1 { text-wrap: balance; }
 }
 
 /* `backwards` applies the from-state during the delay only. Never `forwards`
-   or `both` with an indefinite trigger — the end state must be the natural,
+   or `both` with an indefinite trigger. The end state must be the natural,
    fully visible one, so a cancelled or unsupported animation leaves content
    readable rather than hidden. */
 .reveal {
@@ -260,7 +260,7 @@ input[type="range"]::-moz-range-thumb {
     0 0 42px -14px color-mix(in oklab, var(--color-accent) 70%, transparent);
 }
 
-/* Numbers big enough to read across a room — used for the three figures that
+/* Numbers big enough to read across a room, used for the three figures that
    carry the whole story. */
 .stat-xl {
   font-family: var(--font-display);

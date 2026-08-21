@@ -6,7 +6,7 @@ import {
 import { getGenai } from "@/lib/data";
 import { num } from "@/lib/format";
 
-export const metadata = { title: "AI assistance — CreditLens" };
+export const metadata = { title: "AI assistance: CreditLens" };
 
 export default function CopilotPage() {
   const genai = getGenai();
@@ -17,13 +17,13 @@ export default function CopilotPage() {
       <PageHeader
         eyebrow="For the underwriting desk"
         title="AI assistance, on a short leash"
-        lede="Two places where a language model genuinely saves time in a lending operation — writing decline letters, and answering questions about the book — with hard limits on what it is allowed to say."
+        lede="Two places where a language model genuinely saves time in a lending operation, writing decline letters and answering questions about the book, with hard limits on what it is allowed to say."
       />
 
       <WhyItMatters question="Where can AI actually help here without becoming a liability?">
         Both of these are real chores. An underwriter drafts the same decline letter
         hundreds of times a month, and an analyst spends their morning pulling
-        numbers someone could have looked up. Neither task needs judgement — which
+        numbers someone could have looked up. Neither task needs judgement, which
         is exactly why they suit a model, and why the model is given
         <strong> no authority over the decision itself</strong>. It writes about
         decisions already made, from reasons it was handed, and it cannot query the
@@ -33,8 +33,8 @@ export default function CopilotPage() {
       {!genai.credentialsConfigured && (
         <Note tone="warn">
           <strong>No Anthropic credentials are configured in this build.</strong> The
-          examples below come from the deterministic offline paths — a template memo and
-          retrieval-only copilot output — not from a model. They are labelled as such
+          examples below come from the deterministic offline paths (a template memo and
+          retrieval-only copilot output) rather than from a model. They are labelled as such
           rather than presented as generated text. With a key set, the same code calls
           the API and the label disappears.
         </Note>
@@ -47,7 +47,7 @@ export default function CopilotPage() {
         <Metric
           label="Cost per 1,000 decisions"
           value={`$${econ.cost_per_1000_decisions_usd.toFixed(2)}`}
-          hint={`${econ.memos_per_1000_decisions} memos — only non-approvals get one.`}
+          hint={`${econ.memos_per_1000_decisions} memos, only non-approvals get one.`}
         />
       </div>
 
@@ -92,7 +92,7 @@ export default function CopilotPage() {
 
       <Card
         title="Analyst copilot"
-        subtitle="Three read-only tools. The model picks a named query and supplies parameters — it never writes SQL."
+        subtitle="Three read-only tools. The model picks a named query and supplies parameters, and it never writes SQL."
       >
         <div className="space-y-5">
           {genai.copilot.map((a) => (
@@ -130,8 +130,8 @@ export default function CopilotPage() {
             <Note>
               The model chooses a name from this list and supplies typed parameters. It
               cannot compose, extend or inject SQL, because it never emits SQL. Letting a
-              model write queries against a production database — even read-only, even
-              with a careful prompt — makes the prompt the security boundary, and a prompt
+              model write queries against a production database, even read-only and even
+              with a careful prompt, makes the prompt the security boundary, and a prompt
               is not a security boundary.
             </Note>
           </div>
@@ -159,7 +159,7 @@ export default function CopilotPage() {
         <div className="mt-4">
           <Note>
             Memos are high volume and templated, so they run on the cheap tier at{" "}
-            ${econ.cost_per_memo_usd.toFixed(4)} each — {econ.memos_per_1000_decisions} per
+            ${econ.cost_per_memo_usd.toFixed(4)} each, {econ.memos_per_1000_decisions} per
             1,000 decisions, since only non-approvals get one, for{" "}
             ${econ.cost_per_1000_decisions_usd.toFixed(2)} per 1,000. The copilot answers
             open questions and needs real reasoning, so it runs on the mid tier; its usage

@@ -41,7 +41,7 @@ export const JOURNEY = [
     href: "/model-card",
     label: "Governance",
     question: "Can we defend it in two years?",
-    blurb: "Purpose, performance, limitations — the document a regulator asks for.",
+    blurb: "Purpose, performance, limitations: the document a regulator asks for.",
   },
   {
     href: "/copilot",

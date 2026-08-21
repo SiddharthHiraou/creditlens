@@ -5,7 +5,7 @@ import { Card, Metric, Note, PageHeader, WhyItMatters } from "@/components/ui";
 import { getApplicants, getExplainability, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
-export const metadata = { title: "Underwriting — CreditLens" };
+export const metadata = { title: "Underwriting: CreditLens" };
 
 export default function ScorePage() {
   const applicants = getApplicants();
@@ -17,13 +17,13 @@ export default function ScorePage() {
       <PageHeader
         eyebrow="For the underwriter"
         title="Decide an application"
-        lede="One applicant at a time: the decision, what drove it, and — if the answer is no — the letter you are legally required to send."
+        lede="One applicant at a time: the decision, what drove it, and, if the answer is no, the letter you are legally required to send."
       />
 
       <WhyItMatters question="Can I decline this person, and can I tell them exactly why?">
         Under the Equal Credit Opportunity Act, a US lender that declines an
         application must give the applicant the <strong>specific principal reasons</strong>.
-        Not &ldquo;your score was too low&rdquo; — the actual factors. Get this wrong
+        Not &ldquo;your score was too low&rdquo;. The actual factors. Get this wrong
         and it is a regulatory finding, not a bug report. Most credit models cannot
         do it at all, which is why lenders end up bolting a separate rules engine
         beside the model just to produce the letter.
@@ -45,7 +45,7 @@ export default function ScorePage() {
       <Card title="What can never appear in a decline letter">
         <Note>
           Age, sex, family status and number of dependents are suppressed outright. The
-          model&apos;s single strongest feature is an interaction that embeds age — it is
+          model&apos;s single strongest feature is an interaction that embeds age. It is
           disclosed as a credit-bureau-score reason, never as an age reason, so the
           applicant is told something they can act on and no protected attribute is ever
           named as a basis for denial. All {summary.nFeaturesBuilt} built features are

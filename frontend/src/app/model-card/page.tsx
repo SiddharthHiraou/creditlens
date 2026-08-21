@@ -6,7 +6,7 @@ import {
 import { getExplainability, getFairness, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
-export const metadata = { title: "Governance — CreditLens" };
+export const metadata = { title: "Governance: CreditLens" };
 
 export default function ModelCardPage() {
   const summary = getSummary();
@@ -19,12 +19,12 @@ export default function ModelCardPage() {
       <PageHeader
         eyebrow="For governance and audit"
         title="What this model is, and where it breaks"
-        lede={`The document a validation committee asks for before a model is allowed to make real decisions. Generated from the training run itself — model ${summary.champion}, spec ${summary.featureSpecFingerprint}, ${summary.generatedAt}.`}
+        lede={`The document a validation committee asks for before a model is allowed to make real decisions. Generated from the training run itself: model ${summary.champion}, spec ${summary.featureSpecFingerprint}, ${summary.generatedAt}.`}
       />
 
       <WhyItMatters question="If someone asks in two years how a decision was made, can we answer?">
         Banking regulators expect every model in production to have a written
-        owner, a stated purpose, known limitations and a monitoring plan — and
+        owner, a stated purpose, known limitations and a monitoring plan, and
         expect the document to still be true. This one is <strong>generated from
         the artifacts</strong> rather than written by hand, because a governance
         document whose numbers have quietly drifted from the model is worse than
@@ -35,7 +35,7 @@ export default function ModelCardPage() {
         <div className="space-y-3 text-sm leading-relaxed">
           <p>
             Estimates the probability that a consumer instalment loan reaches 90 days
-            past due within 12 months of origination, and maps that to a 300–850 score
+            past due within 12 months of origination, and maps that to a 300 to 850 score
             and an approve / refer / decline decision under a configurable policy cutoff.
           </p>
           <p className="text-[var(--text-muted)]">
@@ -76,8 +76,8 @@ export default function ModelCardPage() {
       <Card title="Training data and target">
         <Table head={["", ""]}>
           <Row><Cell align="left" mono={false}>Target</Cell><Cell align="left" mono={false}>90+ DPD within 12 months of origination</Cell></Row>
-          <Row><Cell align="left" mono={false}>Indeterminate</Cell><Cell align="left" mono={false}>30–89 DPD — excluded from training, scored at evaluation</Cell></Row>
-          <Row><Cell align="left" mono={false}>Censored</Cell><Cell align="left" mono={false}>Performance window not closed — dropped entirely, even if already delinquent</Cell></Row>
+          <Row><Cell align="left" mono={false}>Indeterminate</Cell><Cell align="left" mono={false}>30 to 89 DPD, excluded from training, scored at evaluation</Cell></Row>
+          <Row><Cell align="left" mono={false}>Censored</Cell><Cell align="left" mono={false}>Performance window not closed, dropped entirely, even if already delinquent</Cell></Row>
           <Row><Cell align="left" mono={false}>Split</Cell><Cell align="left" mono={false}>Out-of-time by origination date; never random</Cell></Row>
           <Row><Cell align="left" mono={false}>Imbalance</Cell><Cell align="left" mono={false}>scale_pos_weight and threshold tuning. SMOTE is not used anywhere</Cell></Row>
           <Row><Cell align="left" mono={false}>Features</Cell><Cell align="left" mono={false}>{summary.nFeaturesBuilt} built, {summary.nFeaturesSelected} selected, {summary.nMonotonicConstraints} monotonically constrained</Cell></Row>
@@ -94,7 +94,7 @@ export default function ModelCardPage() {
             on that generator, not on real borrowers.
           </Limitation>
           <Limitation title="Fails the four-fifths rule on age">
-            Disparate impact {num(age.disparate_impact, 4)}; the 18–24 band is approved
+            Disparate impact {num(age.disparate_impact, 4)}; the 18 to 24 band is approved
             at {pct(age.disparate_impact, 0)} of the rate of the 65+ band. No legally
             deployable mitigation reaches 0.80.
           </Limitation>

@@ -35,7 +35,7 @@ export function ScoreWorkbench({ applicants }: { applicants: Applicant[] }) {
     <div className="space-y-6">
       <Card
         title="Pick an applicant"
-        subtitle="A spread of real outcomes — approved, referred and declined. Colour shows the decision."
+        subtitle="A spread of real outcomes: approved, referred and declined. Colour shows the decision."
       >
         <div className="flex flex-wrap gap-2">
           {applicants.map((a) => (
@@ -102,7 +102,7 @@ export function ScoreWorkbench({ applicants }: { applicants: Applicant[] }) {
             {applicant.reasonCodes.length === 0 ? (
               <Note>
                 This applicant was approved. Reason codes are an adverse action
-                artifact — an approved applicant has not been denied anything, so
+                artifact, and an approved applicant has not been denied anything, so
                 issuing them &ldquo;reasons&rdquo; would be meaningless and, in a
                 letter, misleading.
               </Note>

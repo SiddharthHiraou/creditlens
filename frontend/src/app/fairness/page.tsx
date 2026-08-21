@@ -9,7 +9,7 @@ import {
 import { getFairness } from "@/lib/data";
 import { count, num, pct } from "@/lib/format";
 
-export const metadata = { title: "Fair lending — CreditLens" };
+export const metadata = { title: "Fair lending: CreditLens" };
 
 const LABELS: Record<string, string> = { gender: "Gender", ageBand: "Age band" };
 
@@ -23,7 +23,7 @@ export default function FairnessPage() {
       <PageHeader
         eyebrow="For compliance and legal"
         title="Fair lending"
-        lede="Whether the model approves protected groups at similar rates — measured, not asserted. This one does not pass on age, and that is stated here rather than buried."
+        lede="Whether the model approves protected groups at similar rates, measured and not asserted. This one does not pass on age, and that is stated here rather than buried."
       />
 
       <WhyItMatters question="Would a regulator find that we treat some groups worse than others?">
@@ -39,7 +39,7 @@ export default function FairnessPage() {
         {entries.map(([key, group]) => (
           <Metric
             key={key}
-            label={`${LABELS[key] ?? key} — approval-rate ratio`}
+            label={`${LABELS[key] ?? key}, approval-rate ratio`}
             value={num(group.disparate_impact, 4)}
             tone={group.passes_four_fifths ? "good" : "bad"}
             hint={
@@ -52,7 +52,7 @@ export default function FairnessPage() {
         <Metric label="Gap among those who would repay" value={num(age.equal_opportunity_difference, 4)}
           tone="bad" hint="Even comparing only creditworthy applicants, age bands are approved at different rates." />
         <Metric label="Independently cross-checked" value="exact match"
-          tone="good" hint="Every figure computed twice — once here, once with Microsoft's Fairlearn library." />
+          tone="good" hint="Every figure computed twice, once here, once with Microsoft's Fairlearn library." />
       </div>
 
       {entries.map(([key, group]) => (
@@ -115,7 +115,7 @@ export default function FairnessPage() {
           <Note>
             Most of the measured disparity is a property of <em>where the cutoff sits</em>,
             not of the model&apos;s ranking. Loosening from 40% to 90% approval more than
-            triples the disparate impact ratio — and still does not reach 0.80, while the
+            triples the disparate impact ratio, and still does not reach 0.80, while the
             bad rate among approved rises from 4.6% to 12.6%. Moving a single cutoff
             costs no AUC; it changes who is approved, never the ranking.
           </Note>
@@ -155,8 +155,8 @@ export default function FairnessPage() {
         <Note>
           Calibration-by-group and equalized odds cannot both hold when base rates differ
           across groups. That is a mathematical result, not an implementation gap. This
-          model prioritises calibration — a predicted PD means the same thing for every
-          band, within about a percentage point — and consequently does not satisfy
+          model prioritises calibration (a predicted PD means the same thing for every
+          band, within about a percentage point) and consequently does not satisfy
           equalized odds. That is a policy choice, and it is recorded as one in the model
           card.
         </Note>

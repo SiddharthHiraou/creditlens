@@ -9,7 +9,7 @@ import {
 import { getMonitoring, getSummary } from "@/lib/data";
 import { count, num } from "@/lib/format";
 
-export const metadata = { title: "Monitoring — CreditLens" };
+export const metadata = { title: "Monitoring: CreditLens" };
 
 export default function MonitoringPage() {
   const monitoring = getMonitoring();
@@ -47,7 +47,7 @@ export default function MonitoringPage() {
           <VintagePsiChart data={monitoring.vintagePsi} thresholds={monitoring.thresholds} />
         </Card>
         <Card title="Do today's applicants score like the old ones?"
-          subtitle="Training population against the current one. Both binned on the baseline's own quantiles — re-binning each period would make the measure structurally near zero.">
+          subtitle="Training population against the current one. Both binned on the baseline's own quantiles, because re-binning each period would make the measure structurally near zero.">
           <PsiBinsChart data={monitoring.psiBins} />
         </Card>
       </div>
@@ -82,7 +82,7 @@ export default function MonitoringPage() {
               checks pass against the incumbent: AUC within 1%, calibration error not
               worsening, score PSI below 0.25, rank ordering monotonic, and disparate
               impact not falling by more than 0.05. There is no promote-with-a-warning
-              path — a failing gate raises an issue and leaves the incumbent serving.
+              path. A failing gate raises an issue and leaves the incumbent serving.
             </Note>
           </div>
         </Card>
@@ -110,7 +110,7 @@ export default function MonitoringPage() {
         Everything here compares the out-of-time fold against the training baseline, so
         it measures drift the model already faced. Live drift against served decisions is
         available from <code>GET /v1/monitoring/drift</code> when the API is running.
-        Score PSI for this model is {num(summary.headline.psi, 4)} — stable.
+        Score PSI for this model is {num(summary.headline.psi, 4)}, which is stable.
       </Note>
     
       <NextStep current="/monitoring" />
