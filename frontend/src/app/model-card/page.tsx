@@ -1,4 +1,6 @@
-import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
+import {
+  Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
+} from "@/components/ui";
 import { getExplainability, getFairness, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
@@ -13,10 +15,19 @@ export default function ModelCardPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Governance"
-        title="Model card"
-        lede={`Champion ${summary.champion}, feature spec ${summary.featureSpecFingerprint}, generated ${summary.generatedAt}.`}
+        eyebrow="For governance and audit"
+        title="What this model is, and where it breaks"
+        lede={`The document a validation committee asks for before a model is allowed to make real decisions. Generated from the training run itself — model ${summary.champion}, spec ${summary.featureSpecFingerprint}, ${summary.generatedAt}.`}
       />
+
+      <WhyItMatters question="If someone asks in two years how a decision was made, can we answer?">
+        Banking regulators expect every model in production to have a written
+        owner, a stated purpose, known limitations and a monitoring plan — and
+        expect the document to still be true. This one is <strong>generated from
+        the artifacts</strong> rather than written by hand, because a governance
+        document whose numbers have quietly drifted from the model is worse than
+        having none: it will be believed.
+      </WhyItMatters>
 
       <Card title="Intended use">
         <div className="space-y-3 text-sm leading-relaxed">

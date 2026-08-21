@@ -1,4 +1,6 @@
-import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
+import {
+  Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
+} from "@/components/ui";
 import { getGenai } from "@/lib/data";
 import { num } from "@/lib/format";
 
@@ -11,10 +13,20 @@ export default function CopilotPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Analyst"
-        title="Portfolio copilot and memo drafting"
-        lede="Two grounded LLM features. A memo generator that narrates reason codes an underwriter can send, and a tool-calling copilot that answers questions over portfolio statistics, model metrics and the written credit policy."
+        eyebrow="For the underwriting desk"
+        title="AI assistance, on a short leash"
+        lede="Two places where a language model genuinely saves time in a lending operation — writing decline letters, and answering questions about the book — with hard limits on what it is allowed to say."
       />
+
+      <WhyItMatters question="Where can AI actually help here without becoming a liability?">
+        Both of these are real chores. An underwriter drafts the same decline letter
+        hundreds of times a month, and an analyst spends their morning pulling
+        numbers someone could have looked up. Neither task needs judgement — which
+        is exactly why they suit a model, and why the model is given
+        <strong> no authority over the decision itself</strong>. It writes about
+        decisions already made, from reasons it was handed, and it cannot query the
+        database freely.
+      </WhyItMatters>
 
       {!genai.credentialsConfigured && (
         <Note tone="warn">

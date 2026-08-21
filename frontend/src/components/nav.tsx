@@ -7,14 +7,17 @@ import { useState } from "react";
 
 import { ThemeToggle } from "./theme-toggle";
 
+// Labelled by the job each page does for a lending team, not by the technique
+// behind it. "PSI monitoring" means nothing to a credit officer; "is the model
+// still right" is the question they actually have.
 const LINKS = [
   { href: "/", label: "Overview" },
-  { href: "/score", label: "Score" },
+  { href: "/score", label: "Underwriting" },
   { href: "/portfolio", label: "Portfolio" },
   { href: "/monitoring", label: "Monitoring" },
-  { href: "/fairness", label: "Fairness" },
-  { href: "/model-card", label: "Model card" },
-  { href: "/copilot", label: "Copilot" },
+  { href: "/fairness", label: "Fair lending" },
+  { href: "/model-card", label: "Governance" },
+  { href: "/copilot", label: "AI assistance" },
 ];
 
 export function Nav() {

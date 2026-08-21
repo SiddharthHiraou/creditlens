@@ -34,8 +34,8 @@ export function ScoreWorkbench({ applicants }: { applicants: Applicant[] }) {
   return (
     <div className="space-y-6">
       <Card
-        title="Applicant"
-        subtitle="A spread across decision bands. A scoring page that only shows declines does not demonstrate the product."
+        title="Pick an applicant"
+        subtitle="A spread of real outcomes — approved, referred and declined. Colour shows the decision."
       >
         <div className="flex flex-wrap gap-2">
           {applicants.map((a) => (
@@ -66,13 +66,13 @@ export function ScoreWorkbench({ applicants }: { applicants: Applicant[] }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <div className="space-y-6">
-          <Card title="Decision" action={<Badge tone={tone}>{applicant.decision}</Badge>}>
+          <Card title="The decision" action={<Badge tone={tone}>{applicant.decision}</Badge>}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Metric label="Credit score" value={num(applicant.score, 0)} tone={tone} />
-              <Metric label="Probability of default" value={pct(applicant.pd, 2)} tone={tone} />
-              <Metric label="Exposure" value={compactMoney(applicant.exposure)} />
+              <Metric label="Chance of default" value={pct(applicant.pd, 2)} tone={tone} />
+              <Metric label="Amount requested" value={compactMoney(applicant.exposure)} />
               <Metric label="Expected loss" value={compactMoney(applicant.expectedLoss)}
-                hint="PD × LGD 65% × exposure" />
+                hint="What we lose on average: risk × 65% unrecovered × amount." />
             </div>
           </Card>
 
@@ -132,8 +132,8 @@ export function ScoreWorkbench({ applicants }: { applicants: Applicant[] }) {
           </Card>
 
           <Card
-            title="SHAP contributions"
-            subtitle="Top 10 by magnitude. Positive pushes toward default, negative toward repayment."
+            title="What moved the decision"
+            subtitle="The ten strongest factors. Red pushed toward declining, green toward approving."
           >
             <ChartFrame height={320}>
               <BarChart data={waterfall} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>

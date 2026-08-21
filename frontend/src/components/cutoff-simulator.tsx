@@ -85,8 +85,8 @@ export function CutoffSimulator({ data }: { data: SimulatorData }) {
   return (
     <div className="space-y-6">
       <Card
-        title="Cutoff simulator"
-        subtitle={`${count(data.sampledFrom)} out-of-time applications with realised outcomes. Bad rate is observed, not predicted.`}
+        title="Move the approval rate"
+        subtitle={`A ${count(data.score.length)}-loan sample of the ${count(data.sampledFrom)} test applications, all with known outcomes. The default rate below is what happened, not a forecast.`}
         action={
           <Badge tone={current.profit >= best.profit * 0.98 ? "good" : "neutral"}>
             {current.profit >= best.profit * 0.98 ? "near profit-optimal" : "off optimum"}
@@ -98,7 +98,7 @@ export function CutoffSimulator({ data }: { data: SimulatorData }) {
             <div>
               <div className="mb-2 flex items-baseline justify-between">
                 <label htmlFor="approval" className="text-xs font-medium">
-                  Approval rate
+                  Approve this share of applicants
                 </label>
                 <span className="text-sm font-semibold tabular-nums">
                   {pct(current.approvalRate, 1)}
@@ -115,14 +115,14 @@ export function CutoffSimulator({ data }: { data: SimulatorData }) {
                 className="w-full accent-[var(--color-accent)]"
               />
               <p className="mt-1.5 text-xs tabular-nums text-[var(--text-muted)]">
-                score cutoff {current.cutoff.toFixed(1)} · {count(current.n)} approved
+                cutoff score {current.cutoff.toFixed(0)} · {count(current.n)} of {count(sorted.length)} approved
               </p>
             </div>
 
             <div>
               <div className="mb-2 flex items-baseline justify-between">
                 <label htmlFor="margin" className="text-xs font-medium">
-                  Interest margin
+                  Interest margin we earn
                 </label>
                 <span className="text-sm font-semibold tabular-nums">{pct(margin, 0)}</span>
               </div>
@@ -151,20 +151,20 @@ export function CutoffSimulator({ data }: { data: SimulatorData }) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Metric label="Bad rate among approved" value={pct(current.badRate, 2)}
+            <Metric label="Of those approved, this share defaults" value={pct(current.badRate, 2)}
               tone={current.badRate > 0.12 ? "bad" : current.badRate > 0.08 ? "warn" : "good"} />
-            <Metric label="Expected loss" value={compactMoney(current.expectedLoss)}
-              hint="PD × LGD × exposure, summed over approvals." />
-            <Metric label="Interest income" value={compactMoney(current.income)}
-              hint="Margin earned on the share expected to perform." />
-            <Metric label="Estimated profit" value={compactMoney(current.profit)}
+            <Metric label="Money we expect to lose" value={compactMoney(current.expectedLoss)}
+              hint="Across every loan approved at this setting." />
+            <Metric label="Interest we expect to earn" value={compactMoney(current.income)}
+              hint="From the loans expected to be repaid." />
+            <Metric label="Profit" value={compactMoney(current.profit)}
               tone={current.profit > 0 ? "good" : "bad"} compare={`optimum ${compactMoney(best.profit)}`} />
           </div>
         </div>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Profit across the cutoff range" subtitle="Interest income net of expected loss.">
+        <Card title="Where profit peaks" subtitle="Interest earned, minus what we expect to lose, at every approval rate.">
           <ChartFrame>
             <AreaChart data={curve} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>
@@ -190,7 +190,7 @@ export function CutoffSimulator({ data }: { data: SimulatorData }) {
           </ChartFrame>
         </Card>
 
-        <Card title="Bad rate against approval rate" subtitle="Approving more admits more bads. This is the trade.">
+        <Card title="The cost of approving more" subtitle="Every additional approval brings in more defaults. This is the trade.">
           <ChartFrame>
             <AreaChart data={curve} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <defs>

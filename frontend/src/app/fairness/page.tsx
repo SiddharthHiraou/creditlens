@@ -1,7 +1,9 @@
 import {
   CalibrationByGroupChart, MitigationTradeoffChart, SelectionRateChart,
 } from "@/components/charts/fairness-charts";
-import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
+import {
+  Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
+} from "@/components/ui";
 import { getFairness } from "@/lib/data";
 import { count, num, pct } from "@/lib/format";
 
@@ -17,16 +19,25 @@ export default function FairnessPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Model validator"
-        title="Fairness"
-        lede="Disparity was measured, mitigation options were tested, and the cost of each was quantified. Nothing here claims the model is fair or that bias was removed — that is not a claim this evidence supports."
+        eyebrow="For compliance and legal"
+        title="Fair lending"
+        lede="Whether the model approves protected groups at similar rates — measured, not asserted. This one does not pass on age, and that is stated here rather than buried."
       />
+
+      <WhyItMatters question="Would a regulator find that we treat some groups worse than others?">
+        A lender does not have to intend discrimination to be liable for it. US
+        fair lending law looks at <strong>effect</strong>: if a protected group is
+        approved at well under four-fifths the rate of the most-approved group,
+        that alone triggers scrutiny. Which means this cannot be a page you generate
+        once and file. It is regenerated on every model change, and it is allowed
+        to come back red.
+      </WhyItMatters>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {entries.map(([key, group]) => (
           <Metric
             key={key}
-            label={`${LABELS[key] ?? key} — disparate impact`}
+            label={`${LABELS[key] ?? key} — approval-rate ratio`}
             value={num(group.disparate_impact, 4)}
             tone={group.passes_four_fifths ? "good" : "bad"}
             hint={
@@ -36,10 +47,10 @@ export default function FairnessPage() {
             }
           />
         ))}
-        <Metric label="Equal-opportunity gap, age" value={num(age.equal_opportunity_difference, 4)}
-          tone="bad" hint="Persists among applicants who would have repaid." />
-        <Metric label="Fairlearn cross-check" value="0e+00"
-          tone="good" hint="Every metric computed twice; the two implementations agree exactly." />
+        <Metric label="Gap among those who would repay" value={num(age.equal_opportunity_difference, 4)}
+          tone="bad" hint="Even comparing only creditworthy applicants, age bands are approved at different rates." />
+        <Metric label="Independently cross-checked" value="exact match"
+          tone="good" hint="Every figure computed twice — once here, once with Microsoft's Fairlearn library." />
       </div>
 
       {entries.map(([key, group]) => (
@@ -77,8 +88,8 @@ export default function FairnessPage() {
       ))}
 
       <Card
-        title="What mitigation costs"
-        subtitle="A single group-blind cutoff is the only legally deployable lever here."
+        title="Could we fix it, and what would it cost?"
+        subtitle="Moving one cutoff for everyone is the only lever a lender may lawfully pull."
       >
         <MitigationTradeoffChart curve={fairness.cutoffCurve} fourFifths={fairness.fourFifths} />
         <div className="mt-6">
@@ -109,7 +120,7 @@ export default function FairnessPage() {
         </div>
       </Card>
 
-      <Card title="Group-specific thresholds" subtitle="Run to establish the frontier. Not a deployable recommendation.">
+      <Card title="The fix that would work, and why we cannot use it" subtitle="Different cutoffs per group. Modelled to size the trade-off, never to ship.">
         <Table head={["Strategy", "Approval rate", "Disparate impact", "Equal-opportunity gap", "Bad rate among approved"]}>
           {fairness.thresholdOptimizer.map((t) => (
             <Row key={t.strategy}>
@@ -138,7 +149,7 @@ export default function FairnessPage() {
         </div>
       </Card>
 
-      <Card title="The tension that cannot be resolved">
+      <Card title="Why you cannot satisfy every fairness definition at once">
         <Note>
           Calibration-by-group and equalized odds cannot both hold when base rates differ
           across groups. That is a mathematical result, not an implementation gap. This

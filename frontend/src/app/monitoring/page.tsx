@@ -1,7 +1,9 @@
 import {
   CsiChart, PsiBinsChart, VintagePsiChart,
 } from "@/components/charts/monitoring-charts";
-import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
+import {
+  Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
+} from "@/components/ui";
 import { getMonitoring, getSummary } from "@/lib/data";
 import { count, num } from "@/lib/format";
 
@@ -15,38 +17,46 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Model risk"
-        title="Drift monitoring"
-        lede="PSI answers whether the population has moved, which is a different and much earlier question than whether performance has degraded — performance needs outcomes, and outcomes arrive twelve months late."
+        eyebrow="For the model risk team"
+        title="Is the model still right?"
+        lede="Models do not fail loudly. They quietly stop matching the people applying today, and keep approving with the same confidence they had two years ago."
       />
 
+      <WhyItMatters question="Have the people applying today drifted away from the ones the model learned on?">
+        You cannot wait for defaults to tell you. A loan written this month will
+        not be known good or bad for a <strong>year</strong>, so by the time
+        performance drops you have already written twelve months of bad business.
+        The measures below watch the <em>applicants</em> instead of the outcomes,
+        which is the only signal available early enough to act on.
+      </WhyItMatters>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Score PSI" value={num(monitoring.scorePsi, 4)}
+        <Metric label="Population shift" value={num(monitoring.scorePsi, 4)}
           tone={monitoring.isAlarm ? "bad" : monitoring.scorePsi >= 0.1 ? "warn" : "good"}
           hint={monitoring.verdict} />
-        <Metric label="Investigate threshold" value={num(monitoring.thresholds.investigate, 2)} />
-        <Metric label="Alarm threshold" value={num(monitoring.thresholds.alarm, 2)} />
-        <Metric label="Least stable feature" value={num(worst.csi, 4)} hint={worst.feature} tone="good" />
+        <Metric label="Investigate above" value={num(monitoring.thresholds.investigate, 2)} hint="Worth a look." />
+        <Metric label="Retrain above" value={num(monitoring.thresholds.alarm, 2)} hint="Stages a replacement model." />
+        <Metric label="Most-changed input" value={num(worst.csi, 4)} hint={worst.feature} tone="good" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Score PSI by vintage"
-          subtitle="A single PSI number hides when the drift started. Per-cohort shows the shape.">
+        <Card title="When did the applicants start changing?"
+          subtitle="Population Stability Index by month of origination. One number hides when a shift began; per-cohort shows the shape.">
           <VintagePsiChart data={monitoring.vintagePsi} thresholds={monitoring.thresholds} />
         </Card>
-        <Card title="Score distribution against the training baseline"
-          subtitle="Both binned on the baseline's own quantiles — re-binning each period would make PSI structurally near zero.">
+        <Card title="Do today's applicants score like the old ones?"
+          subtitle="Training population against the current one. Both binned on the baseline's own quantiles — re-binning each period would make the measure structurally near zero.">
           <PsiBinsChart data={monitoring.psiBins} />
         </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Characteristic stability" subtitle="Per-feature PSI. This is how you find which input moved once the score PSI fires.">
+        <Card title="Which inputs moved?" subtitle="Characteristic Stability Index per input. Once the overall score shifts, this is how you find the cause.">
           <CsiChart data={monitoring.featureCsi} />
         </Card>
 
-        <Card title="Champion against challengers"
-          subtitle="All four tracks scored on the same out-of-time fold. Promotion is gated on beating the incumbent, not on beating a fresh baseline.">
+        <Card title="Could a different model do better?"
+          subtitle="Four candidates on the same unseen loans. A replacement must beat the model already running, not just look good on its own.">
           <Table head={["Model", "OOT AUC", "OOT Gini", ""]}>
             {monitoring.challengers.map((c) => (
               <Row key={c.name}>
@@ -76,7 +86,7 @@ export default function MonitoringPage() {
         </Card>
       </div>
 
-      <Card title="Full CSI table" subtitle={`${count(monitoring.featureCsi.length)} features shown, worst first.`}>
+      <Card title="Every input, ranked by how much it moved" subtitle={`${count(monitoring.featureCsi.length)} shown, most-changed first.`}>
         <Table head={["Feature", "CSI", "Verdict"]} dense>
           {monitoring.featureCsi.map((f) => (
             <Row key={f.feature}>

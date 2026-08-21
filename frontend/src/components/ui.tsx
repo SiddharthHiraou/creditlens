@@ -152,6 +152,38 @@ export function Note({ children, tone = "neutral" }: { children: ReactNode; tone
   );
 }
 
+export function WhyItMatters({
+  question, children,
+}: {
+  question: string; children: ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/[0.06] p-5">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-accent)]">
+        The question this page answers
+      </p>
+      <p className="mt-1.5 text-base font-medium leading-snug">{question}</p>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
+        {children}
+      </p>
+    </div>
+  );
+}
+
+export function Jargon({ term, children }: { term: string; children: ReactNode }) {
+  return (
+    <span className="inline-flex items-baseline gap-1">
+      <span>{term}</span>
+      <span
+        title={typeof children === "string" ? children : undefined}
+        className="cursor-help border-b border-dotted border-[var(--text-muted)] text-[var(--text-muted)]"
+      >
+        ⓘ
+      </span>
+    </span>
+  );
+}
+
 export function PageHeader({
   title, lede, eyebrow,
 }: {
