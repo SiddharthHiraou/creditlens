@@ -220,7 +220,7 @@ def threshold_optimizer_frontier(
                 approved,
                 sensitive,
                 baseline_auc,
-                note="group-specific thresholds — analytical only, unlawful to deploy",
+                note="group-specific thresholds: analytical only, unlawful to deploy",
             ).as_dict()
         )
     return pl.DataFrame(rows)

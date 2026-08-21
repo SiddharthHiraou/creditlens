@@ -230,7 +230,7 @@ def run(*, approve_rate: float = 0.60, n_counterfactual: int = 120) -> dict[str,
             "equal_opportunity_difference",
             "bad_rate_among_approved",
         ),
-        "Group-specific thresholds — analytical only, unlawful to deploy",
+        "Group-specific thresholds: analytical only, unlawful to deploy",
     )
     console.print(
         "[yellow]Parity here is bought by approving almost everyone. Read the bad rate "

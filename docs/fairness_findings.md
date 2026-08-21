@@ -14,7 +14,7 @@ the model is fair, or that bias was removed.
 | Gender | 0.9782 | **passes** | 0.0170 |
 | Age band | 0.3843 | **fails** | 0.4921 |
 
-Every number is computed twice — once here, once through Fairlearn — and the
+Every number is computed twice, once here and once through Fairlearn, and the
 two agree to 0.00e+00. A hand-rolled fairness metric that quietly disagrees with
 the reference implementation is exactly the error that survives review and then
 fails an audit.
@@ -44,7 +44,7 @@ Nothing here warrants intervention.
 | 55-64 | 1,856 | 0.7856 | 0.1024 | 0.1022 | -0.0001 |
 | 65+ | 369 | 0.8889 | 0.0705 | 0.0643 | -0.0061 |
 
-Disparate impact **0.3843** — the youngest band is approved at 38% of the rate
+Disparate impact **0.3843**. The youngest band is approved at 38% of the rate
 of the oldest. This fails the four-fifths rule decisively, and the equal
 opportunity gap of 0.4921 says the disparity persists even among applicants who
 would have repaid.
@@ -53,7 +53,7 @@ Three observations that belong together:
 
 **The disparity tracks a real difference in outcomes.** Observed bad rate falls
 monotonically from 26.4% (18-24) to 7.1% (65+). The model is not inventing the
-gap; it is measuring one. That is an explanation, not a justification — disparate
+gap; it is measuring one. That is an explanation, not a justification. Disparate
 impact is assessed on effect, not intent.
 
 **The model is well calibrated within every band.** The largest gap is +2.3
@@ -62,14 +62,14 @@ every other band is within 1.2 points. So this is not a case of a model being
 systematically wrong about one group, which would be the more damaging failure.
 
 **Direction matters legally.** ECOA specifically protects applicants aged 62 and
-over. The disparity here runs the other way — the oldest band is the most
-approved — so the specific elderly-applicant prohibition is not engaged. That
+over. The disparity here runs the other way, because the oldest band is the most
+approved, so the specific elderly-applicant prohibition is not engaged. That
 does not make a 0.38 disparate impact ratio acceptable; it means the exposure is
 general fair-lending risk rather than a named statutory violation.
 
 ## Mitigation, and what each option costs
 
-### Single group-blind cutoff — the only legally deployable lever
+### Single group-blind cutoff: the only legally deployable lever
 
 | Target approval rate | Disparate impact | Equal-opportunity gap | Bad rate among approved |
 |---|---|---|---|
@@ -82,13 +82,13 @@ general fair-lending risk rather than a named statutory violation.
 
 Most of the measured disparity is a property of **where the cutoff sits**, not
 of the model's ranking. Loosening from 40% to 90% approval more than triples the
-disparate impact ratio — and still does not reach 0.80, while the bad rate among
+disparate impact ratio, and still does not reach 0.80, while the bad rate among
 approved rises from 4.6% to 12.6%.
 
 Moving a single cutoff costs no AUC. It changes who is approved, never the
 ranking.
 
-### Group-specific thresholds — analytical only
+### Group-specific thresholds: analytical only
 
 | Constraint | Approval rate | Disparate impact | Equal-opportunity gap | Bad rate among approved |
 |---|---|---|---|---|
@@ -109,8 +109,8 @@ misleading number.
 
 Calibration-by-group and equalized odds cannot both hold when base rates differ
 across groups. That is a mathematical result, not an implementation gap. This
-model prioritises **calibration** — a predicted PD means the same thing for
-every band, within about a percentage point — and consequently does not satisfy
+model prioritises **calibration** (a predicted PD means the same thing for
+every band, within about a percentage point) and consequently does not satisfy
 equalized odds.
 
 That is a policy choice, and it belongs in the model card as one.

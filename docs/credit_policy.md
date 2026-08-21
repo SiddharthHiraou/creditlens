@@ -1,4 +1,4 @@
-# Credit Policy — Unsecured Personal Instalment Lending
+# Credit Policy: Unsecured Personal Instalment Lending
 
 **Owner:** Chief Credit Officer
 **Version:** 1.0 · Effective 2026-08-20 · Review cycle: semi-annual
@@ -32,7 +32,7 @@ No automated system may originate a loan outside the approve band.
 
 ## 2. Decision bands
 
-Decisions are made on the CreditLens score, a 300–850 scale where higher is safer.
+Decisions are made on the CreditLens score, a 300 to 850 scale where higher is safer.
 
 | Band | Score | Action |
 |---|---|---|
@@ -50,7 +50,7 @@ The current policy targets a **60% approval rate** with a **10% referral band**.
 
 ### 2.2 Profit-based review
 The Committee reviews the profit curve at each quarterly setting. The
-profit-maximising cutoff is an input, not the decision — the Committee may sit
+profit-maximising cutoff is an input, not the decision. The Committee may sit
 below it for growth or above it for capital preservation, and must minute the reason.
 
 ---
@@ -65,7 +65,7 @@ The score falls in the referral band.
 
 ### 3.2 Thin bureau file
 **Fewer than three bureau trade lines, or fewer than 24 months of bureau history.**
-A thin file is not itself adverse — it means the model has less to work with, and the
+A thin file is not itself adverse. It means the model has less to work with, and the
 score carries wider uncertainty. The underwriter should seek corroborating evidence
 of income and residence stability rather than treating thinness as a negative.
 
@@ -153,7 +153,7 @@ against the original decision; the model's output is never overwritten.
 
 ### 7.3 Monitoring
 Override rate is reported monthly. Sustained override rates above 15% in any band
-trigger a model review — persistent disagreement means the model or the cutoff is
+trigger a model review, because persistent disagreement means the model or the cutoff is
 wrong, not that underwriters are.
 
 ---
@@ -214,5 +214,5 @@ decision taken. The absence of a viable mitigation is documented, not omitted.
 
 Applicant data used in scoring is limited to the approved feature specification.
 Decision records retain the full feature vector for reconstruction. Model-assisted
-drafting receives only the decision, the reason codes and rounded figures — never the
+drafting receives only the decision, the reason codes and rounded figures, never the
 full applicant record.

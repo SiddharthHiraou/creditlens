@@ -213,7 +213,7 @@ def _offline_answer(question: str) -> tuple[str, list[dict]]:
         "",
     ]
     for passage in hits["passages"]:
-        lines.append(f"— {passage['source']} · {passage['heading']}")
+        lines.append(f"{passage['source']} · {passage['heading']}")
         lines.append(f"  {passage['text'][:400].strip()}")
         lines.append("")
     return "\n".join(lines).strip(), calls
