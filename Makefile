@@ -1,4 +1,4 @@
-.PHONY: help setup data validate baseline features train train-fast audit explain memo copilot drift retrain promote docs demo-data warm-cache serve loadtest ui ui-build ui-check up down mlflow test lint fmt cov clean
+.PHONY: help setup data validate baseline features train train-fast audit explain memo copilot drift retrain promote docs demo-data warm-cache serve loadtest ui ui-build ui-check deploy up down mlflow test lint fmt cov clean
 
 PY := .venv/bin/python
 UV := uv
@@ -58,6 +58,10 @@ ui:  ## Run the frontend dev server (http://localhost:3000)
 
 ui-build:  ## Static-export the frontend to frontend/out
 	cd frontend && npm install --silent && npm run build
+
+deploy:  ## Regenerate demo snapshots and deploy the dashboard to Vercel
+	$(PY) -m src.api.export_demo
+	cd frontend && vercel deploy --prod --yes
 
 ui-check:  ## Typecheck the frontend
 	cd frontend && npx tsc --noEmit
