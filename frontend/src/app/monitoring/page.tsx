@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import {
   CsiChart, PsiBinsChart, VintagePsiChart,
 } from "@/components/charts/monitoring-charts";
@@ -15,7 +16,7 @@ export default function MonitoringPage() {
   const worst = monitoring.featureCsi[0];
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For the model risk team"
         title="Is the model still right?"
@@ -110,6 +111,6 @@ export default function MonitoringPage() {
         available from <code>GET /v1/monitoring/drift</code> when the API is running.
         Score PSI for this model is {num(summary.headline.psi, 4)} — stable.
       </Note>
-    </div>
+    </Stagger>
   );
 }

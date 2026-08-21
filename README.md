@@ -5,7 +5,7 @@ regulator, and an auditor.**
 
 ### [→ Try the live demo](https://creditlens-seven.vercel.app)
 
-![CreditLens overview](docs/images/overview.png)
+![CreditLens overview](docs/images/overview.jpg)
 
 ---
 
@@ -72,11 +72,11 @@ Send it an application, and about 9 milliseconds later you get back:
 - **A decision** — approve, decline, or refer to a human
 - **Four specific reasons**, in plain English, if the answer is no
 
-![Reason codes for a declined application](docs/images/score.png)
+![Reason codes for a declined application](docs/images/score.jpg)
 
 And the risk manager's view — move the approval rate, watch the money move:
 
-![Setting the approval rate](docs/images/portfolio.png)
+![Setting the approval rate](docs/images/portfolio.jpg)
 
 And around the decision itself:
 

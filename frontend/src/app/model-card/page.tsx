@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import {
   Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
 } from "@/components/ui";
@@ -13,7 +14,7 @@ export default function ModelCardPage() {
   const age = fairness.groups.ageBand;
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For governance and audit"
         title="What this model is, and where it breaks"
@@ -173,7 +174,7 @@ export default function ModelCardPage() {
         <Badge>Reason code mapping v{explain.reasonCodes.mapping_version}</Badge>
         <Badge>Feature spec {summary.featureSpecFingerprint}</Badge>
       </div>
-    </div>
+    </Stagger>
   );
 }
 

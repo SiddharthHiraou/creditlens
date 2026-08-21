@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import {
   Badge, Card, Cell, Metric, Note, PageHeader, Row, Table, WhyItMatters,
 } from "@/components/ui";
@@ -11,7 +12,7 @@ export default function CopilotPage() {
   const econ = genai.unitEconomics;
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For the underwriting desk"
         title="AI assistance, on a short leash"
@@ -167,6 +168,6 @@ export default function CopilotPage() {
           </Note>
         </div>
       </Card>
-    </div>
+    </Stagger>
   );
 }

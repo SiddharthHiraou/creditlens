@@ -10,7 +10,7 @@ export function Card({
   return (
     <section
       className={clsx(
-        "rounded-xl border p-5",
+        "card-hover rounded-2xl border p-5 shadow-[var(--card-shadow)]",
         "border-[var(--border)] bg-[var(--surface-raised)]",
         className,
       )}
@@ -32,10 +32,10 @@ export function Card({
 }
 
 export function Metric({
-  label, value, hint, tone = "neutral", compare,
+  label, value, hint, tone = "neutral", compare, accent = false,
 }: {
   label: string; value: string; hint?: string;
-  tone?: "neutral" | "good" | "warn" | "bad"; compare?: string;
+  tone?: "neutral" | "good" | "warn" | "bad"; compare?: string; accent?: boolean;
 }) {
   const toneClass = {
     neutral: "text-[var(--text)]",
@@ -45,11 +45,18 @@ export function Metric({
   }[tone];
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="card-hover group rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--text-muted)]">
         {label}
       </p>
-      <p className={clsx("mt-1.5 text-2xl font-semibold tabular-nums", toneClass)}>{value}</p>
+      <p
+        className={clsx(
+          "mt-1.5 text-2xl font-semibold tabular-nums",
+          accent ? "gradient-text text-3xl" : toneClass,
+        )}
+      >
+        {value}
+      </p>
       {compare && (
         <p className="mt-0.5 text-xs tabular-nums text-[var(--text-muted)]">{compare}</p>
       )}
@@ -192,12 +199,15 @@ export function PageHeader({
   return (
     <header className="mb-8">
       {eyebrow && (
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-[var(--color-accent)]">
+        <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/[0.08] px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-[var(--color-accent)]">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
           {eyebrow}
         </p>
       )}
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">{lede}</p>
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.08]">
+        {title}
+      </h1>
+      <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-[var(--text-muted)]">{lede}</p>
     </header>
   );
 }

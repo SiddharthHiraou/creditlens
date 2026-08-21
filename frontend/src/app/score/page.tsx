@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import { ScoreWorkbench } from "@/components/score-workbench";
 import { Card, Metric, Note, PageHeader, WhyItMatters } from "@/components/ui";
 import { getApplicants, getExplainability, getSummary } from "@/lib/data";
@@ -11,7 +12,7 @@ export default function ScorePage() {
   const summary = getSummary();
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For the underwriter"
         title="Decide an application"
@@ -51,6 +52,6 @@ export default function ScorePage() {
           build if that stops being true.
         </Note>
       </Card>
-    </div>
+    </Stagger>
   );
 }

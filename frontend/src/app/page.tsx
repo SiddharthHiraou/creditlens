@@ -1,7 +1,11 @@
 import Link from "next/link";
 
-import { Badge, Card, Metric, PageHeader, Table, Row, Cell, Note } from "@/components/ui";
-import { getExplainability, getFairness, getPortfolio, getSummary } from "@/lib/data";
+import { DecisionStream } from "@/components/decision-stream";
+import { Reveal, Stagger } from "@/components/motion";
+import { Badge, Card, Cell, Metric, Note, PageHeader, Row, Table } from "@/components/ui";
+import {
+  getExplainability, getFairness, getPortfolio, getSimulator, getSummary,
+} from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
 export default function Home() {
@@ -9,6 +13,7 @@ export default function Home() {
   const fairness = getFairness();
   const explain = getExplainability();
   const portfolio = getPortfolio();
+  const simulator = getSimulator();
   const { headline, baseline } = summary;
   const age = fairness.groups.ageBand;
 
@@ -16,12 +21,20 @@ export default function Home() {
   const declined = portfolio.bands.find((b) => b.decision === "decline");
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="Credit decisioning and model risk"
         title="Lending decisions a bank could defend"
         lede="Built for lenders writing unsecured consumer loans at volume — a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale. That last part is what separates a model that works from one a bank is allowed to use."
       />
+
+      <Reveal>
+        <DecisionStream
+          data={simulator}
+          approveAt={summary.policy.approveAt}
+          referAt={summary.policy.referAt}
+        />
+      </Reveal>
 
       <Card
         title="The trade every lender makes"
@@ -94,7 +107,7 @@ export default function Home() {
           label="Gini (out-of-time)"
           value={num(headline.gini, 4)}
           compare={`baseline ${num(baseline.gini, 4)}`}
-          tone="good"
+          accent
         />
         <Metric
           label="KS"
@@ -231,7 +244,7 @@ export default function Home() {
           <Metric label="Declines with 4 distinct reasons" value={pct(explain.reasonCodes.share_with_four_reasons, 0)} tone="good" />
         </div>
       </Card>
-    </div>
+    </Stagger>
   );
 }
 

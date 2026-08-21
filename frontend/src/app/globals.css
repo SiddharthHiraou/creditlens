@@ -4,6 +4,10 @@
    and dark are a single source of truth rather than a colour scattered through
    forty components. */
 @theme {
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
   --color-ink-50: #f6f7f9;
   --color-ink-100: #eceef2;
   --color-ink-200: #d5d9e2;
@@ -16,32 +20,46 @@
   --color-ink-900: #141821;
   --color-ink-950: #0c0f15;
 
-  --color-approve: #2f9e6f;
-  --color-refer: #c98a1f;
-  --color-decline: #cf4b4b;
-  --color-accent: #4f7cf7;
+  /* Signature palette. Decision colours are the identity: this is a product
+     that sorts people into three buckets, so those three colours carry it. */
+  --color-approve: #21c197;
+  --color-refer: #f0a53a;
+  --color-decline: #f2545b;
+  --color-accent: #6d7cff;
+  --color-accent-2: #22d3ee;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
-  --surface: #ffffff;
-  --surface-raised: #f6f7f9;
-  --border: #e2e5eb;
-  --text: #141821;
+  --surface: #fbfbfd;
+  --surface-raised: #ffffff;
+  --border: #e4e7ee;
+  --border-strong: #d3d8e3;
+  --text: #10131a;
   --text-muted: #5a6577;
   --grid: #e8eaee;
+  --glow: 0 0 0 rgba(0, 0, 0, 0);
+  --card-shadow: 0 1px 2px rgba(16, 19, 26, 0.04), 0 8px 24px -12px rgba(16, 19, 26, 0.12);
+  --mesh-1: rgba(109, 124, 255, 0.10);
+  --mesh-2: rgba(34, 211, 238, 0.08);
+  --noise-opacity: 0.025;
 }
 
 .dark {
   color-scheme: dark;
-  --surface: #0c0f15;
-  --surface-raised: #141821;
-  --border: #262d3a;
-  --text: #eceef2;
-  --text-muted: #8f99ab;
-  --grid: #222834;
+  --surface: #080a10;
+  --surface-raised: #10131b;
+  --border: #222836;
+  --border-strong: #2f3747;
+  --text: #eef0f5;
+  --text-muted: #909aad;
+  --grid: #1c2230;
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -20px rgba(0, 0, 0, 0.9);
+  --mesh-1: rgba(109, 124, 255, 0.16);
+  --mesh-2: rgba(34, 211, 238, 0.10);
+  --noise-opacity: 0.04;
 }
 
 /* The background goes on <html> as well as <body>. Painting only the body
@@ -56,6 +74,47 @@ body {
   background: var(--surface);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Two soft colour fields behind everything. Fixed, so content scrolls over a
+   still background rather than dragging a gradient with it. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60rem 40rem at 12% -8%, var(--mesh-1), transparent 60%),
+    radial-gradient(50rem 34rem at 92% 4%, var(--mesh-2), transparent 62%);
+}
+
+/* Film grain. Breaks up the flat fills so large dark areas do not band. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1, h2, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.022em;
+}
+
+/* Big figures should read as data, not prose: even widths, tight tracking. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 /* Recharts renders SVG text that Tailwind classes cannot reach. */
@@ -76,4 +135,84 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---- motion ------------------------------------------------------------ */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes sheen {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 var(--ring-color); }
+  70%  { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.reveal {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Gradient text for the one number per page that matters most. */
+.gradient-text {
+  background: linear-gradient(96deg, var(--color-accent), var(--color-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-hover {
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+
+/* Range inputs are the main interactive control; the browser default is grim. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 2px solid var(--color-accent);
+  box-shadow: 0 2px 8px rgba(109, 124, 255, 0.45);
+  cursor: grab;
+  transition: transform 0.12s ease;
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.15);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 2px solid var(--color-accent);
+  cursor: grab;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none !important; }
+  .card-hover:hover { transform: none; }
 }

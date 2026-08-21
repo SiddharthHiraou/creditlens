@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import {
   CalibrationByGroupChart, MitigationTradeoffChart, SelectionRateChart,
 } from "@/components/charts/fairness-charts";
@@ -17,7 +18,7 @@ export default function FairnessPage() {
   const age = fairness.groups.ageBand;
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For compliance and legal"
         title="Fair lending"
@@ -159,6 +160,6 @@ export default function FairnessPage() {
           card.
         </Note>
       </Card>
-    </div>
+    </Stagger>
   );
 }

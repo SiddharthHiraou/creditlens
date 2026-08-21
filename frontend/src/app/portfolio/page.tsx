@@ -1,3 +1,4 @@
+import { Stagger } from "@/components/motion";
 import { CutoffSimulator } from "@/components/cutoff-simulator";
 import {
   DecileChart, ScoreDistribution, VintageChart,
@@ -17,7 +18,7 @@ export default function PortfolioPage() {
   );
 
   return (
-    <div className="space-y-10">
+    <Stagger className="space-y-10">
       <PageHeader
         eyebrow="For the risk manager"
         title="Set the approval rate"
@@ -108,6 +109,6 @@ export default function PortfolioPage() {
           </Table>
         </div>
       </Card>
-    </div>
+    </Stagger>
   );
 }
