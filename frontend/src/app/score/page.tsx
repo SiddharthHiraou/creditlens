@@ -3,7 +3,7 @@ import { Card, Metric, Note, PageHeader, WhyItMatters } from "@/components/ui";
 import { getApplicants, getExplainability, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
-export const metadata = { title: "Score — CreditLens" };
+export const metadata = { title: "Underwriting — CreditLens" };
 
 export default function ScorePage() {
   const applicants = getApplicants();

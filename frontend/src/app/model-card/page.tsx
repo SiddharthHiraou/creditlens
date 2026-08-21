@@ -4,7 +4,7 @@ import {
 import { getExplainability, getFairness, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
-export const metadata = { title: "Model card — CreditLens" };
+export const metadata = { title: "Governance — CreditLens" };
 
 export default function ModelCardPage() {
   const summary = getSummary();

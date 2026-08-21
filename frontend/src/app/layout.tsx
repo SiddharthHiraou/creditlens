@@ -7,9 +7,9 @@ import { Providers } from "@/components/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CreditLens — credit decisioning and model risk",
+  title: "CreditLens — automated lending decisions a bank could defend",
   description:
-    "Probability of default, ECOA reason codes, fairness measurement and drift monitoring for consumer lending.",
+    "Decides consumer loan applications, explains every decline in plain English, proves it is not discriminating, and flags when it has gone stale.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

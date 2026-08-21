@@ -7,7 +7,7 @@ import {
 import { getFairness } from "@/lib/data";
 import { count, num, pct } from "@/lib/format";
 
-export const metadata = { title: "Fairness — CreditLens" };
+export const metadata = { title: "Fair lending — CreditLens" };
 
 const LABELS: Record<string, string> = { gender: "Gender", ageBand: "Age band" };
 

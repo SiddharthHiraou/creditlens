@@ -4,7 +4,7 @@ import {
 import { getGenai } from "@/lib/data";
 import { num } from "@/lib/format";
 
-export const metadata = { title: "Copilot — CreditLens" };
+export const metadata = { title: "AI assistance — CreditLens" };
 
 export default function CopilotPage() {
   const genai = getGenai();
