@@ -1,6 +1,7 @@
 # CreditLens
 
-**Deciding who gets a loan — and being able to explain why.**
+**Automated lending decisions a bank could actually defend — to a customer, a
+regulator, and an auditor.**
 
 ### [→ Try the live demo](https://creditlens-seven.vercel.app)
 
@@ -8,34 +9,81 @@
 
 ---
 
+## Who this is for
+
+Any lender making a high volume of small, unsecured credit decisions — a
+neobank, a credit union, a personal-loan originator, a buy-now-pay-later
+provider. The kind of business where thousands of applications arrive a month
+and a human cannot look at each one.
+
+It replaces the three things those teams typically run on: a spreadsheet of
+hand-written rules, a manual underwriter for every file, or a bought-in bureau
+score nobody can explain to the customer it declined.
+
 ## The problem
 
-A bank gets a loan application. Someone has to decide: approve it, decline it,
-or have a human look closer.
+Lending is a balance with money on both sides.
 
-Getting that decision right is only half the job. In the US, if you turn someone
-down you are legally required to tell them *specifically why*. Your regulator
-will ask whether the model treats younger applicants differently. And in a year,
-when a loan goes bad, someone will ask exactly how that decision was made.
+**Approve too many** and defaults eat the margin. **Approve too few** and you
+turn away good customers and leave revenue on the table — and someone who
+deserved credit doesn't get it.
 
-Most machine learning projects answer the first half. **CreditLens is built
-around the second half**, because that is the part that decides whether a model
-is allowed anywhere near real customers.
+Here's that trade, measured on this project's own 16,276-loan test book:
+
+| If you approve… | …this share of approved loans goes bad |
+|---|---|
+| 40% of applicants | 4.6% |
+| **60%** *(the policy here)* | **6.7%** |
+| 90% of applicants | 12.6% |
+| everyone | 16.8% |
+
+Every extra approval is more revenue *and* more loss. There is no setting that
+avoids the trade — the job is to find the point where the model separates the
+two groups well enough that the next approval is still worth taking.
+
+**This model does separate them.** At a 60% approval rate, the loans it approves
+default at **6.7%**, while the ones it turns away default at **36.9%** — five
+times the rate. That gap is the entire product.
+
+### But being accurate isn't enough to ship
+
+Three more things stand between a working model and one a bank is allowed to
+use, and they're where most projects stop:
+
+**You must explain a "no".** In the US, decline someone and you're legally
+required to tell them the specific reasons — not "your score was low". Every
+decline here produces four distinct, plain-English reasons, and never names a
+protected characteristic like age.
+
+**You must prove it isn't discriminating.** Regulators test whether protected
+groups are approved at similar rates. This project measures that, reports where
+it **fails**, and shows what fixing it would cost.
+
+**You must know when it goes stale.** Applicants in 2027 won't look like those
+in 2025. A daily check watches for that drift, and an automated gate blocks any
+replacement model that isn't demonstrably safer.
 
 ## What it does
 
 Send it an application, and about 9 milliseconds later you get back:
 
-- **A risk estimate** — the chance this loan isn't repaid, as a real probability
+- **A risk estimate** — the chance this loan isn't repaid, as an honest probability
 - **A credit score**, 300–850, the familiar scale
 - **A decision** — approve, decline, or refer to a human
 - **Four specific reasons**, in plain English, if the answer is no
 
 ![Reason codes for a declined application](docs/images/score.png)
 
-Around that sits the rest of it: a dashboard for risk managers, drift monitoring,
-fairness testing, an audit trail for every decision, and an automated gate that
-blocks a new model from going live unless it clears five safety checks.
+And around the decision itself:
+
+| | |
+|---|---|
+| **Risk dashboard** | Move the approval rate and watch losses and profit move with it |
+| **Audit trail** | Every decision stored with the exact inputs, reasons and model version |
+| **Fairness testing** | Approval rates by protected group, measured every time the model changes |
+| **Drift monitoring** | Daily check on whether applicants still look like the training data |
+| **Promotion gate** | Five automated checks a new model must pass before it can go live |
+| **Draft notices** | AI-written decline letters, restricted to reasons the model actually gave |
 
 ## Does it actually work?
 
@@ -52,12 +100,13 @@ test. Real lending doesn't let you predict the past.
 | **46 ms** | fast | Time to a full decision, including the explanation |
 | **$1.00** | cheap | AI cost per 1,000 decisions |
 
-That last "honest probabilities" one nearly went wrong, and it's the mistake I'd
-most want to point at. The model was accurate at *ranking* people but its actual
-numbers were nonsense — it claimed 43% of applicants would default when the real
-figure was 17%. Every accuracy metric looked healthy. If you'd used those numbers
-to estimate losses, you'd have been wrong by two and a half times. A calibration
-step fixes it, and the dashboard shows the before and after.
+That "honest probabilities" one nearly went wrong, and it's the mistake I'd most
+want to point at. The model was good at *ranking* people but its actual numbers
+were nonsense — it claimed 43% of applicants would default when the real figure
+was 17%. Every accuracy metric looked healthy. A lender using those numbers to
+forecast losses would have been wrong by two and a half times, and would have
+priced and provisioned against a book that didn't exist. A calibration step fixes
+it, and the dashboard shows the before and after.
 
 ## Try it
 
@@ -124,18 +173,35 @@ check.
 the approval rate and watch losses and profit move. Those numbers come from what
 *actually happened* to those loans, not from what the model guessed.
 
-## What this isn't
+## What it is and isn't built for
 
-Being straight about the limits, because they matter:
+**Built for:** unsecured consumer instalment loans — the kind a neobank, credit
+union or personal-loan lender writes at volume, roughly 5,000 to 1,500,000 in
+principal over 12 to 60 months.
+
+**Not built for:** mortgages, secured lending, commercial credit, credit cards,
+pricing, or collections. It has never been validated on those and its
+probabilities would not transfer. The score measures a **loan**, not a person —
+it is not a judgement of anyone's character or general creditworthiness.
+
+**Not a replacement for an underwriter.** The referral band exists precisely
+because the applications nearest the cutoff are where the model is least certain
+and a human adds the most. Any automated decline is reversible by an underwriter
+with a written reason, and that reversal is recorded against the original.
+
+### Honest limitations
 
 - **The data is synthetic.** The real datasets need a manual download I couldn't
   automate. The code reads the real files the moment they exist, but no number
-  here describes real borrowers.
+  here describes real borrowers, and none of it should be quoted as evidence
+  about real lending.
+- **It fails the fairness test on age.** Younger applicants are approved at 38%
+  of the rate of older ones. I could find no legal fix that closes the gap. That
+  needs a lawyer and a fair-lending specialist, not more engineering.
 - **The AI writing features have never made a live call.** No API key was
   available. The guardrails around them are tested; the live behaviour isn't.
-- **It fails the fairness test on age**, as above. That needs a lawyer, not more
-  engineering.
-- **It's a portfolio project.** It is not running anyone's lending.
+- **It's a portfolio project.** It is not running anyone's lending, and it would
+  need retraining on real data plus a compliance review before it could.
 
 ## Want more detail?
 

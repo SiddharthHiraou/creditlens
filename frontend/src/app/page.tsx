@@ -1,23 +1,93 @@
 import Link from "next/link";
 
 import { Badge, Card, Metric, PageHeader, Table, Row, Cell, Note } from "@/components/ui";
-import { getExplainability, getFairness, getSummary } from "@/lib/data";
+import { getExplainability, getFairness, getPortfolio, getSummary } from "@/lib/data";
 import { num, pct } from "@/lib/format";
 
 export default function Home() {
   const summary = getSummary();
   const fairness = getFairness();
   const explain = getExplainability();
+  const portfolio = getPortfolio();
   const { headline, baseline } = summary;
   const age = fairness.groups.ageBand;
+
+  const approved = portfolio.bands.find((b) => b.decision === "approve");
+  const declined = portfolio.bands.find((b) => b.decision === "decline");
 
   return (
     <div className="space-y-10">
       <PageHeader
         eyebrow="Credit decisioning and model risk"
-        title="CreditLens"
-        lede="A lender submits an application. CreditLens returns a probability of default, a mapped 300–850 score, an approve / refer / decline decision, ECOA-compliant reason codes and the attributions behind them — with the monitoring, fairness measurement and governance artifacts a model validation team would ask for."
+        title="Lending decisions a bank could defend"
+        lede="Built for lenders writing unsecured consumer loans at volume — a neobank, a credit union, a personal-loan originator. It decides who gets credit, explains every decline in plain English, proves it isn't discriminating, and tells you when it has gone stale. That last part is what separates a model that works from one a bank is allowed to use."
       />
+
+      <Card
+        title="The trade every lender makes"
+        subtitle={`Measured on this book of ${headline.n.toLocaleString()} loans with known outcomes — not projected.`}
+      >
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+          <div>
+            <Table head={["If you approve…", "…this share of approved loans goes bad"]}>
+              {fairness.cutoffCurve.map((c) => (
+                <Row key={c.approvalRate}>
+                  <Cell align="left" mono={false}>
+                    {c.approvalRate === 0.6 ? (
+                      <span className="font-medium">
+                        {pct(c.approvalRate, 0)} <Badge tone="accent">current policy</Badge>
+                      </span>
+                    ) : (
+                      pct(c.approvalRate, 0)
+                    )}
+                  </Cell>
+                  <Cell
+                    className={
+                      c.badRateAmongApproved > 0.1 ? "text-[var(--color-decline)]" : undefined
+                    }
+                  >
+                    {pct(c.badRateAmongApproved, 1)}
+                  </Cell>
+                </Row>
+              ))}
+              <Row>
+                <Cell align="left" mono={false}>everyone (no model)</Cell>
+                <Cell className="text-[var(--color-decline)]">{pct(headline.badRate, 1)}</Cell>
+              </Row>
+            </Table>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Approve too many and defaults eat the margin. Approve too few and you turn
+              away good customers. There is no setting that avoids the trade — the job is
+              to separate the two groups well enough that the next approval is still worth
+              taking.
+            </p>
+            {approved && declined && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Metric
+                  label="Loans it approves"
+                  value={pct(approved.badRate, 1)}
+                  hint="default rate"
+                  tone="good"
+                />
+                <Metric
+                  label="Loans it turns away"
+                  value={pct(declined.badRate, 1)}
+                  hint="default rate"
+                  tone="bad"
+                />
+              </div>
+            )}
+            <Note>
+              A {(declined && approved ? declined.badRate / approved.badRate : 0).toFixed(1)}×
+              gap between the two groups. That separation is the entire product — everything
+              else on this site exists to prove it is real, fair, and still true next quarter.
+            </Note>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric
@@ -47,29 +117,29 @@ export default function Home() {
       </div>
 
       <Card
-        title="What is actually here"
-        subtitle={`Champion: ${summary.champion}. ${summary.nFeaturesBuilt} features built, ${summary.nFeaturesSelected} selected, ${summary.nMonotonicConstraints} under monotonic constraint.`}
+        title="What a lending team would use this for"
+        subtitle={`Model: ${summary.champion}. ${summary.nFeaturesBuilt} signals built per applicant, ${summary.nFeaturesSelected} kept, ${summary.nMonotonicConstraints} direction-locked so more debt can never look safer.`}
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Feature
             href="/score"
-            title="Underwriter view"
-            body="A decision, four distinct ECOA reason codes, and the SHAP contributions behind them."
+            title="Decline someone lawfully"
+            body="Four specific reasons in plain English, ranked, never naming a protected characteristic. The law requires this; most models cannot do it."
           />
           <Feature
             href="/portfolio"
-            title="Cutoff simulator"
-            body="Move the cutoff, watch approval rate, bad rate, expected loss and profit move with it."
+            title="Set the approval rate"
+            body="Drag the cutoff and watch defaults, losses and profit move. Real outcomes, so it shows what would actually have happened."
           />
           <Feature
             href="/monitoring"
-            title="Drift"
-            body="PSI on the score, CSI per feature, and champion against challengers."
+            title="Know when it goes stale"
+            body="Applicants change. A daily check catches the drift, and a gate blocks any replacement model that isn't demonstrably safer."
           />
           <Feature
             href="/fairness"
-            title="Fairness"
-            body={`Measured, not claimed. Age fails the four-fifths rule at ${num(age.disparate_impact, 3)}.`}
+            title="Prove it isn't discriminating"
+            body={`Approval rates by protected group. This model fails the standard test on age at ${num(age.disparate_impact, 3)} — reported, not hidden.`}
           />
         </div>
       </Card>
