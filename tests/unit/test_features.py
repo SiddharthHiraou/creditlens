@@ -123,11 +123,18 @@ def test_bookkeeping_columns_never_leak_into_the_feature_list(matrix):
 
 def test_thin_file_applicants_survive_the_join(matrix):
     """A left join is the difference between modelling thin files and
-    silently deleting them."""
-    fm, df = matrix
-    assert "FLAG_no_buro_history" in fm.feature_names or df.height > 0
-    full = build().frame.collect()
-    assert full.height == 50_000
+    silently deleting them.
+
+    Asserted against the source table's own row count rather than a literal,
+    so the test does not depend on how large a dataset was generated.
+    """
+    fm, _ = matrix
+    assert "FLAG_no_buro_history" in fm.feature_names
+
+    from src.ingestion.loaders import load
+
+    applicants = load("application", validate=False).select(pl.len()).collect().item()
+    assert build().frame.select(pl.len()).collect().item() == applicants
 
 
 def test_history_counts_fill_to_zero_but_ratios_stay_null():

@@ -17,7 +17,7 @@ Setup, once: `make setup && make data && make train && make up`
 > out-of-time validation, calibrated probabilities, drift monitoring, fairness
 > measurement, an audit log, and an automated promotion gate."
 
-Open `http://localhost:3000`. Headline numbers on screen: Gini 0.5827, KS 0.4349,
+Open `http://localhost:3000`. Headline numbers on screen: Gini 0.5826, KS 0.4348,
 Brier 0.1148, PSI 0.0174.
 
 ---

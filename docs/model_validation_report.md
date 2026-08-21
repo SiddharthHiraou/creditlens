@@ -112,9 +112,9 @@ Adequate but not generous. Recommend a larger fold at the next retrain.
 | Metric | Out-of-time | Benchmark |
 |---|---|---|
 | AUC | 0.7913 | Baseline 0.7624 |
-| Gini | 0.5827 | Baseline 0.5249 |
-| KS | 0.4349 | Above the 0.25 usability floor |
-| PR-AUC | 0.4654 | Prevalence 0.1681 |
+| Gini | 0.5826 | Baseline 0.5249 |
+| KS | 0.4348 | Above the 0.25 usability floor |
+| PR-AUC | 0.4652 | Prevalence 0.1681 |
 
 **Assessed: acceptable.** Train-to-out-of-time AUC degradation is minimal,
 indicating the model is not overfit and the split is genuine.
@@ -169,7 +169,7 @@ suppressed, asserted by a test that fails the build.
 
 | Attribute | Disparate impact | Four-fifths | Equal opportunity |
 |---|---|---|---|
-| Gender | 0.9782 | passes | 0.0170 |
+| Gender | 0.9777 | passes | 0.0172 |
 | Age band | 0.3843 | **fails** | 0.4921 |
 
 **Assessed: measured competently; the result is adverse.**

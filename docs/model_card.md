@@ -2,7 +2,7 @@
 
 **Model:** `creditlens-pd` · champion **catboost**
 **Feature spec:** version 1, fingerprint `19cc7282140b4dd2`
-**Generated:** 2026-08-20T23:24:23+00:00 — by `make docs`, from the training artifacts
+**Generated:** 2026-08-21T04:24:21+00:00 — by `make docs`, from the training artifacts
 
 ---
 
@@ -60,10 +60,10 @@ Out-of-time test fold. Never touched during training, tuning or model selection.
 | Metric | Champion | Phase 1 baseline |
 |---|---|---|
 | AUC | **0.7913** | 0.7624 |
-| Gini | **0.5827** | 0.5249 |
-| KS | **0.4349** | 0.3818 |
-| PR-AUC | 0.4654 | 0.4360 |
-| Brier | **0.11484** | 0.2066 |
+| Gini | **0.5826** | 0.5249 |
+| KS | **0.4348** | 0.3818 |
+| PR-AUC | 0.4652 | 0.4360 |
+| Brier | **0.11485** | 0.2066 |
 | Score PSI | 0.0174 | — |
 
 **Accuracy is reported nowhere in this project.** At a 17%
@@ -74,10 +74,10 @@ bad rate, "approve everyone" scores 83% and is worthless.
 | Track | Valid AUC | OOT AUC | OOT Gini | OOT KS |
 |---|---|---|---|---|
 | scorecard | 0.7779 | 0.7869 | 0.5738 | 0.4294 |
-| lightgbm | 0.7842 | 0.7915 | 0.5830 | 0.4394 |
+| lightgbm | 0.7809 | 0.7898 | 0.5795 | 0.4355 |
 | xgboost | 0.7823 | 0.7908 | 0.5817 | 0.4439 |
 | catboost | 0.7857 | 0.7913 | 0.5826 | 0.4348 |  ← champion
-| stack | 0.7856 | 0.7921 | 0.5843 | 0.4414 |
+| stack | 0.7854 | 0.7921 | 0.5842 | 0.4402 |
 
 The WOE scorecard lands within
 0.0044
@@ -89,7 +89,7 @@ should ship the scorecard, and the argument would be reasonable.
 
 | | Raw | Calibrated |
 |---|---|---|
-| Brier | 0.19590 | **0.11484** |
+| Brier | 0.19590 | **0.11485** |
 | Expected calibration error | 0.26451 | **0.01282** |
 | Mean predicted PD | 43.26% | **17.53%** |
 | Actual bad rate | — | 16.81% |
@@ -114,17 +114,17 @@ sampling noise.
 
 | Band | n | Approval rate | Observed bad rate | Mean predicted PD | Calibration gap |
 |---|---|---|---|---|---|
-| 18-24 | 966 | 34.16% | 26.40% | 28.67% | +0.0228 |
+| 18-24 | 966 | 34.16% | 26.40% | 28.67% | +0.0227 |
 | 25-34 | 3,096 | 46.58% | 22.29% | 22.72% | +0.0044 |
 | 35-44 | 5,444 | 57.26% | 17.98% | 18.56% | +0.0058 |
 | 45-54 | 4,545 | 68.01% | 13.11% | 14.29% | +0.0117 |
-| 55-64 | 1,856 | 78.56% | 10.24% | 10.22% | -0.0001 |
+| 55-64 | 1,856 | 78.56% | 10.24% | 10.23% | -0.0001 |
 | 65+ | 369 | 88.89% | 7.05% | 6.43% | -0.0061 |
 
 ### Gender
 
-Disparate impact **0.9782** — passes the four-fifths rule.
-Equal-opportunity gap 0.0170. Calibration gaps
+Disparate impact **0.9777** — passes the four-fifths rule.
+Equal-opportunity gap 0.0172. Calibration gaps
 within one percentage point for both groups.
 
 ---
@@ -153,7 +153,7 @@ writes a null date sentinel and never imputes one.
 **The GBDT's margin over the scorecard is thin.** See §3.
 
 **Counterfactuals rarely help.** Only
-1 of
+8 of
 120 declines can be reversed by any feasible
 action, because most declines are driven by credit history nobody can change
 quickly. Applicants declined for actionable reasons gain a median
@@ -199,7 +199,7 @@ about it, and it cannot cite a reason the decision did not carry.
 
 | Attribute | Disparate impact | Four-fifths | Equal-opportunity gap |
 |---|---|---|---|
-| Gender | 0.9782 | passes | 0.0170 |
+| Gender | 0.9777 | passes | 0.0172 |
 | Age band | **0.3843** | **fails** | 0.4921 |
 
 Every metric is computed twice — once in this repository, once through Fairlearn —
@@ -242,4 +242,4 @@ Promotion gate detail in `adr/0009-promotion-gate.md`.
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 2026-08-20 | Initial champion: catboost, spec `19cc7282140b4dd2` |
+| 1.0 | 2026-08-21 | Initial champion: catboost, spec `19cc7282140b4dd2` |

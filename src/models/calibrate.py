@@ -65,33 +65,52 @@ class SmoothedIsotonic:
                 start = i
         self.blocks = blocks
 
-        # Each block gets a band reaching halfway to its neighbours.
-        self.bands: list[tuple[float, float]] = []
+        # Each block gets a band reaching halfway to its neighbours, so adjacent
+        # bands meet exactly and the sequence is non-decreasing.
+        bands: list[tuple[float, float]] = []
         for j, (_, _, yv) in enumerate(blocks):
-            prev_y = (
-                blocks[j - 1][2]
-                if j > 0
-                else max(0.0, 2 * yv - blocks[min(j + 1, len(blocks) - 1)][2])
-            )
-            next_y = (
-                blocks[j + 1][2]
-                if j + 1 < len(blocks)
-                else min(1.0, 2 * yv - blocks[max(j - 1, 0)][2])
-            )
-            self.bands.append(((yv + prev_y) / 2.0, (yv + next_y) / 2.0))
+            prev_y = blocks[j - 1][2] if j > 0 else yv
+            next_y = blocks[j + 1][2] if j + 1 < len(blocks) else yv
+            bands.append(((yv + prev_y) / 2.0, (yv + next_y) / 2.0))
+        self.bands = bands
+
+        # Build one monotone piecewise-linear curve over the whole real line.
+        #
+        # The earlier implementation spread each block in place and left the
+        # *gaps between* blocks to the raw isotonic step. Those gaps are where
+        # it broke: a value just below a block's start still carried the higher
+        # step value, then dropped to the block's band floor on entry. Measured
+        # on the champion that was 55 monotonicity violations with a worst drop
+        # of 0.11 — a higher raw risk mapping to a materially lower calibrated
+        # PD, which is the one property a calibrator must never lose.
+        #
+        # Interpolating over the concatenated block edges removes the gaps
+        # entirely: knots are non-decreasing in x and in y by construction, so
+        # np.interp cannot produce an inversion.
+        knots_x: list[float] = []
+        knots_y: list[float] = []
+        for (x_lo, x_hi, _), (band_lo, band_hi) in zip(blocks, bands, strict=True):
+            knots_x.extend([x_lo, x_hi])
+            knots_y.extend([band_lo, band_hi])
+
+        # np.interp needs strictly increasing x. Nudge exact ties forward by an
+        # ulp-scale step rather than dropping them, so a single-point block
+        # still contributes its band.
+        xs = np.asarray(knots_x, dtype=float)
+        ys = np.maximum.accumulate(np.asarray(knots_y, dtype=float))
+        for i in range(1, xs.size):
+            if xs[i] <= xs[i - 1]:
+                xs[i] = np.nextafter(xs[i - 1], np.inf)
+        self._knots_x = xs
+        self._knots_y = ys
 
     def predict(self, raw: np.ndarray) -> np.ndarray:
         r = np.asarray(raw, dtype=float)
-        out = np.asarray(self.iso.predict(r), dtype=float)
-        for (x_lo, x_hi, _), (band_lo, band_hi) in zip(self.blocks, self.bands, strict=True):
-            if x_hi <= x_lo or band_hi <= band_lo:
-                continue
-            mask = (r >= x_lo) & (r <= x_hi)
-            if not mask.any():
-                continue
-            u = (r[mask] - x_lo) / (x_hi - x_lo)
-            out[mask] = band_lo + u * (band_hi - band_lo)
-        return np.clip(out, 0.0, 1.0)
+        if self._knots_x.size < 2:
+            return np.clip(np.asarray(self.iso.predict(r), dtype=float), 0.0, 1.0)
+        # Outside the fitted range np.interp clamps to the end knots, which is
+        # the same out-of-bounds behaviour the isotonic fit was built with.
+        return np.clip(np.interp(r, self._knots_x, self._knots_y), 0.0, 1.0)
 
 
 @dataclass

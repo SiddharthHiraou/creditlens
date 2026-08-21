@@ -24,8 +24,8 @@ during training, tuning or model selection.
 
 | | Value | Baseline |
 |---|---|---|
-| **Gini** | **0.5827** | 0.5249 |
-| **KS** | **0.4349** | 0.3818 |
+| **Gini** | **0.5826** | 0.5249 |
+| **KS** | **0.4348** | 0.3818 |
 | **AUC** | **0.7913** | 0.7624 |
 | **Brier** (calibrated) | **0.1148** | 0.2066 |
 | **Score PSI** | 0.0174 — stable | — |
@@ -163,7 +163,7 @@ pd 0.2979 | score 511.9 | decline | 9.4ms
 reasons: Debt-to-income, Repayment record, Delinquency on credit file, Prior application history
 ```
 
-272 tests, 73% coverage on `src/`.
+275 tests, 73% coverage on `src/`.
 
 ---
 
@@ -679,7 +679,7 @@ src/llm/          memo generator, analyst copilot, three read-only tools,
 flows/            Prefect: ingest, drift, retrain, promotion gate
 src/cli.py        creditlens data | validate | features | baseline | train |
                   audit | explain | warm-cache | serve | sources
-tests/            272 tests across target, splits, metrics, loaders, WOE, PSI,
+tests/            275 tests across target, splits, metrics, loaders, WOE, PSI,
                   features, calibration, scorecard, selection, decision, reason
                   codes, SHAP, counterfactuals, fairness, mitigation, ensemble,
                   tuning, API contracts, LLM guardrails, Prefect flows and the

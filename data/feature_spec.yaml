@@ -1,5 +1,5 @@
 version: 1
-created_at: '2026-08-20T23:24:23+00:00'
+created_at: '2026-08-21T04:24:21+00:00'
 n_features: 72
 features:
 - AMT_INCOME_TOTAL
@@ -245,8 +245,8 @@ dropped:
   PREV_n_unused: iv<0.02
   DAYS_ID_PUBLISH: iv<0.02
   STAB_id_published_years: iv<0.02
-  FLAG_no_pos_history: iv<0.02
   POS_days_since_last: iv<0.02
+  FLAG_no_pos_history: iv<0.02
   CC_n_cards: iv<0.02
   FLAG_OWN_CAR: iv<0.02
   FLAG_no_cc_history: iv<0.02
