@@ -15,10 +15,9 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-          # This project installs from pyproject.toml rather than a uv.lock,
-          # so the cache key must point at the file that actually defines the
-          # dependencies. The default glob looks for uv.lock and hard-errors
-          # when it finds none.
+          # This project installs from pyproject.toml rather than a uv.lock, so
+          # the cache key must point at the file that defines the dependencies.
+          # The default glob looks for uv.lock and hard-errors when there is none.
           cache-dependency-glob: pyproject.toml
 
       - name: Set up Python
@@ -29,27 +28,38 @@ jobs:
 
       - name: Lint
         run: |
-          .venv/bin/python -m ruff check src tests
-          .venv/bin/python -m ruff format --check src tests
+          .venv/bin/python -m ruff check src tests flows
+          .venv/bin/python -m ruff format --check src tests flows
 
-      - name: Test
-        run: .venv/bin/python -m pytest tests -q --cov=src --cov-report=term-missing --cov-fail-under=70
-
-      # Proves the documented quickstart actually works on a clean machine.
-      - name: Train smoke test
+      # Artifacts are gitignored, so a clean checkout has no data and no model.
+      # The pipeline runs *before* the tests, both because much of the suite
+      # scores against real artifacts and because this proves the documented
+      # quickstart works from nothing. A reduced Optuna budget keeps it inside a
+      # CI runner; the reported numbers come from the full run.
+      - name: Build artifacts from scratch
         run: |
           .venv/bin/python -m src.cli data --n 25000
           .venv/bin/python -m src.cli validate
           .venv/bin/python -m src.cli baseline
           .venv/bin/python -m src.cli train --fast --no-mlflow
           .venv/bin/python -m src.cli audit
-          .venv/bin/python -m src.cli explain
           .venv/bin/python -m src.cli warm-cache
           .venv/bin/python -m src.api.export_demo
+
+      - name: Test
+        run: .venv/bin/python -m pytest tests -q --cov=src --cov-report=term-missing --cov-fail-under=70
+
+      - name: Flows and governance docs
+        run: |
           .venv/bin/python -m src.cli flows ingest
           .venv/bin/python -m src.cli flows drift
           .venv/bin/python -m src.governance
           .venv/bin/python -m src.features.dictionary
+
+      # The generated governance documents must match the committed ones, or
+      # the docs in the repo are describing a model that no longer exists.
+      - name: Explain a decline
+        run: .venv/bin/python -m src.cli explain
 
   terraform:
     runs-on: ubuntu-latest
